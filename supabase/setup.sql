@@ -58,14 +58,15 @@ drop policy if exists gallery_items_authenticated_write on gallery_items;
 create policy gallery_items_authenticated_write on gallery_items
     for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
--- Storage: run this after you've created the "gallery" bucket in the dashboard (Storage > New bucket, public on).
+-- Storage: run this after you've created the "gallary" bucket in the dashboard (Storage > New bucket, public on).
+-- Note: the bucket is intentionally named "gallary" (not "gallery") to match the one already created.
 drop policy if exists gallery_bucket_public_read on storage.objects;
 create policy gallery_bucket_public_read on storage.objects
-    for select using (bucket_id = 'gallery');
+    for select using (bucket_id = 'gallary');
 
 drop policy if exists gallery_bucket_authenticated_upload on storage.objects;
 create policy gallery_bucket_authenticated_upload on storage.objects
-    for insert with check (bucket_id = 'gallery' and auth.uid() is not null);
+    for insert with check (bucket_id = 'gallary' and auth.uid() is not null);
 
 -- ============================== Seed data ==============================
 -- Since the tables get dropped and recreated above, running this whole script again

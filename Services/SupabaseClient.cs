@@ -123,7 +123,7 @@ public class SupabaseClient
         var extension = System.IO.Path.GetExtension(fileName);
         var safeExtension = Regex.IsMatch(extension, @"^\.[A-Za-z0-9]{1,5}$") ? extension.ToLowerInvariant() : "";
         var uniqueName = $"{Guid.NewGuid():N}{safeExtension}";
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/storage/v1/object/gallery/{uniqueName}");
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{_baseUrl}/storage/v1/object/gallary/{uniqueName}");
         request.Headers.Add("apikey", _publishableKey);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -138,7 +138,7 @@ public class SupabaseClient
             throw new InvalidOperationException($"Upload rejected ({(int)response.StatusCode}): {body}");
         }
 
-        return $"{_baseUrl}/storage/v1/object/public/gallery/{uniqueName}";
+        return $"{_baseUrl}/storage/v1/object/public/gallary/{uniqueName}";
     }
 
     // ---------------- Auth ----------------
