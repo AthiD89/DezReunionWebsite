@@ -1,4 +1,5 @@
 @page "/contact"
+@inject FormEmailService EmailService
 
 <PageTitle>Contact — Dez Reunion Events</PageTitle>
 
@@ -52,6 +53,11 @@
                 }
                 else
                 {
+                    @if (_error is not null)
+                    {
+                        <p class="field-error">@_error</p>
+                    }
+
                     <EditForm Model="_model" OnValidSubmit="HandleSubmit">
                         <DataAnnotationsValidator />
 
@@ -73,7 +79,7 @@
                             <ValidationMessage For="() => _model.Message" class="field-error" />
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+                        <button type="submit" class="btn btn-primary btn-block" disabled="@_sending">Send Message</button>
                     </EditForm>
                 }
             </div>
@@ -84,9 +90,38 @@
 @code {
     private ContactMessage _model = new();
     private bool _submitted;
+    private bool _sending;
+    private string? _error;
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        _submitted = true;
+        _error = null;
+        _sending = true;
+        try
+        {
+            var sent = await EmailService.SendAsync("New Contact Message — Dez Reunion Events", new Dictionary<string, string>
+            {
+                ["name"] = _model.Name,
+                ["email"] = _model.Email,
+                ["message"] = _model.Message
+            });
+
+            if (sent)
+            {
+                _submitted = true;
+            }
+            else
+            {
+                _error = "Something went wrong sending your message. Please try again, or reach out via WhatsApp instead.";
+            }
+        }
+        catch (Exception)
+        {
+            _error = "Something went wrong sending your message. Please try again, or reach out via WhatsApp instead.";
+        }
+        finally
+        {
+            _sending = false;
+        }
     }
 }

@@ -1,5 +1,6 @@
 @page "/tickets"
 @inject SupabaseClient Supabase
+@inject FormEmailService EmailService
 
 <PageTitle>Tickets — Dez Reunion Events</PageTitle>
 
@@ -68,11 +69,16 @@
                     <div class="form-success">
                         Thanks @_model.Name! Your RSVP for
                         "@(_upcoming.FirstOrDefault(e => e.Id == _model.EventId)?.Title ?? "the event")"
-                        has been received. We'll email your confirmation and QR ticket to @_model.Email shortly.
+                        has been received — we'll be in touch at @_model.Email to confirm.
                     </div>
                 }
                 else
                 {
+                    @if (_error is not null)
+                    {
+                        <p class="field-error">@_error</p>
+                    }
+
                     <EditForm Model="_model" OnValidSubmit="HandleSubmit">
                         <DataAnnotationsValidator />
 
@@ -111,7 +117,7 @@
                             <ValidationMessage For="() => _model.Guests" class="field-error" />
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-block">Confirm RSVP</button>
+                        <button type="submit" class="btn btn-primary btn-block" disabled="@_sending">Confirm RSVP</button>
                     </EditForm>
                 }
             </div>
@@ -132,6 +138,8 @@
     private List<EventItem> _upcoming = new();
     private RsvpRequest _model = new();
     private bool _submitted;
+    private bool _sending;
+    private string? _error;
 
     [SupplyParameterFromQuery(Name = "event")]
     public int? EventQuery { get; set; }
@@ -148,8 +156,39 @@
 
     private void SelectEvent(int id) => _model.EventId = id;
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
-        _submitted = true;
+        _error = null;
+        _sending = true;
+        try
+        {
+            var eventTitle = _upcoming.FirstOrDefault(e => e.Id == _model.EventId)?.Title ?? "Not specified";
+
+            var sent = await EmailService.SendAsync("New RSVP — Dez Reunion Events", new Dictionary<string, string>
+            {
+                ["name"] = _model.Name,
+                ["email"] = _model.Email,
+                ["phone"] = _model.Phone ?? "",
+                ["event"] = eventTitle,
+                ["guests"] = _model.Guests.ToString()
+            });
+
+            if (sent)
+            {
+                _submitted = true;
+            }
+            else
+            {
+                _error = "Something went wrong sending your RSVP. Please try again, or reach out via WhatsApp instead.";
+            }
+        }
+        catch (Exception)
+        {
+            _error = "Something went wrong sending your RSVP. Please try again, or reach out via WhatsApp instead.";
+        }
+        finally
+        {
+            _sending = false;
+        }
     }
 }

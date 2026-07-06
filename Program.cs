@@ -16,5 +16,6 @@ builder.Services.AddScoped<SupabaseAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp => sp.GetRequiredService<SupabaseAuthStateProvider>());
 
 builder.Services.AddScoped<SupabaseClient>();
+builder.Services.AddScoped<FormEmailService>();
 
 await builder.Build().RunAsync();
