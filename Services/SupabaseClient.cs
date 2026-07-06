@@ -101,6 +101,11 @@ public class SupabaseClient
         return created.First();
     }
 
+    public async Task UpdateGalleryItemAsync(GalleryItem item)
+    {
+        await SendAsync(HttpMethod.Patch, $"/rest/v1/gallery_items?id=eq.{item.Id}", item);
+    }
+
     public async Task DeleteGalleryItemAsync(int id)
     {
         await SendAsync(HttpMethod.Delete, $"/rest/v1/gallery_items?id=eq.{id}");
