@@ -1,0 +1,96 @@
+@page "/gallery/{EventName}"
+@inject SupabaseClient Supabase
+
+<PageTitle>@EventName — Gallery — Dez Reunion Events</PageTitle>
+
+<section class="section page-hero">
+    <div class="container text-center">
+        <span class="eyebrow">Memories</span>
+        <h1 class="section-title">@EventName</h1>
+        <p class="section-subtitle">Photos and videos from this event.</p>
+        <a href="/gallery" class="btn btn-outline btn-sm" style="margin-top:1rem">&larr; Back to Gallery</a>
+    </div>
+</section>
+
+<section class="section" style="padding-top:0">
+    <div class="container">
+        @if (_photos.Count == 0 && _videos.Count == 0)
+        {
+            <p class="text-center section-subtitle">No photos or videos here yet — check back soon.</p>
+        }
+
+        @if (_photos.Count > 0)
+        {
+            <div class="gallery-grid">
+                @foreach (var item in _photos)
+                {
+                    <button class="gallery-thumb" @onclick="() => OpenLightbox(item)" style="background-image: url('@item.ImageUrl')">
+                        <span class="gallery-thumb-label">@item.Title</span>
+                    </button>
+                }
+            </div>
+        }
+
+        @if (_videos.Count > 0)
+        {
+            <div class="section-header" style="margin-top:3.5rem">
+                <span class="eyebrow">Videos</span>
+                <h2 class="section-title">Watch the Highlights</h2>
+            </div>
+            <div class="grid grid-3">
+                @foreach (var video in _videos)
+                {
+                    <div class="card">
+                        @if (!string.IsNullOrWhiteSpace(video.TikTokVideoId))
+                        {
+                            <div class="video-wrap video-wrap-tiktok">
+                                <blockquote class="tiktok-embed" cite="@video.VideoUrl" data-video-id="@video.TikTokVideoId" style="max-width: 100%; min-width: 260px;">
+                                    <section></section>
+                                </blockquote>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="video-wrap">
+                                <iframe src="@video.VideoUrl" title="@video.Title" allowfullscreen loading="lazy"></iframe>
+                            </div>
+                        }
+                        <div class="card-body">
+                            <strong>@video.Title</strong>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@if (_lightboxItem is not null)
+{
+    <div class="lightbox" @onclick="CloseLightbox">
+        <button class="lightbox-close" @onclick="CloseLightbox" aria-label="Close">✕</button>
+        <img src="@_lightboxItem.ImageUrl" alt="@_lightboxItem.Title" @onclick:stopPropagation="true" />
+        <p @onclick:stopPropagation="true">@_lightboxItem.Title</p>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string EventName { get; set; } = "";
+
+    private List<GalleryItem> _photos = new();
+    private List<GalleryItem> _videos = new();
+    private GalleryItem? _lightboxItem;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _lightboxItem = null;
+        var all = await Supabase.GetGalleryItemsAsync();
+        var matching = all.Where(g => g.EventName == EventName).ToList();
+        _photos = matching.Where(g => g.Type == GalleryMediaType.Photo).ToList();
+        _videos = matching.Where(g => g.Type == GalleryMediaType.Video).ToList();
+    }
+
+    private void OpenLightbox(GalleryItem item) => _lightboxItem = item;
+    private void CloseLightbox() => _lightboxItem = null;
+}

@@ -42,7 +42,7 @@ else
                     @if (_event.IsPast)
                     {
                         <div class="past-note">
-                            <p>This event has already happened. Take a look at the photos in our <a href="@($"/gallery?event={Uri.EscapeDataString(_event.Title)}")">gallery</a>.</p>
+                            <p>This event has already happened. Take a look at the photos in our <a href="@($"/gallery/{Uri.EscapeDataString(_event.Title)}")">gallery</a>.</p>
                         </div>
                     }
                 </div>
@@ -92,7 +92,7 @@ else
                     }
                     else
                     {
-                        <a href="@($"/gallery?event={Uri.EscapeDataString(_event.Title)}")" class="btn btn-outline btn-block">View Photos</a>
+                        <a href="@($"/gallery/{Uri.EscapeDataString(_event.Title)}")" class="btn btn-outline btn-block">View Photos</a>
                     }
                 </aside>
             </div>
