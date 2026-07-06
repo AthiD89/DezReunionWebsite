@@ -2,6 +2,22 @@ h1:focus {
     outline: none;
 }
 
+.wasm-loading {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: #120c1e;
+    color: #b8aed1;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.wasm-loading-mark {
+    font-size: 3rem;
+}
+
 .valid.modified:not([type=checkbox]) {
     outline: 1px solid #26b050;
 }

@@ -1,3 +1,6 @@
+@inject SupabaseAuthStateProvider AuthState
+@inject NavigationManager Navigation
+
 <footer class="site-footer">
     <div class="site-footer-inner">
         <div class="footer-brand">
@@ -29,9 +32,7 @@
             <Authorized>
                 <p class="admin-link">
                     <a href="/admin">Admin Dashboard</a> &middot;
-                    <form method="post" action="/admin/logout" class="logout-form">
-                        <button type="submit">Log Out</button>
-                    </form>
+                    <button type="button" class="logout-button" @onclick="HandleLogOut">Log Out</button>
                 </p>
             </Authorized>
             <NotAuthorized>
@@ -40,3 +41,11 @@
         </AuthorizeView>
     </div>
 </footer>
+
+@code {
+    private async Task HandleLogOut()
+    {
+        await AuthState.LogOutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

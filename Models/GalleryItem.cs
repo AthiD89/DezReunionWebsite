@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace DezReunionWebsite.Models;
 
 public enum GalleryMediaType
@@ -8,7 +10,9 @@ public enum GalleryMediaType
 
 public class GalleryItem
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Id { get; set; }
+
     public string Title { get; set; } = "";
     public string EventName { get; set; } = "";
     public string ImageUrl { get; set; } = "";

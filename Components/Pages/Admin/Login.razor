@@ -1,9 +1,6 @@
 @page "/admin/login"
-@using System.Security.Claims
-@using Microsoft.AspNetCore.Authentication
-@using Microsoft.AspNetCore.Authentication.Cookies
+@inject SupabaseClient Supabase
 @inject NavigationManager Navigation
-@inject IConfiguration Configuration
 
 <PageTitle>Admin Login — Dez Reunion Events</PageTitle>
 
@@ -16,13 +13,12 @@
             <p class="field-error text-center">@_error</p>
         }
 
-        <EditForm Model="_model" FormName="admin-login" OnValidSubmit="HandleLogin" method="post">
+        <EditForm Model="_model" OnValidSubmit="HandleLogin">
             <DataAnnotationsValidator />
-            <AntiforgeryToken />
 
             <div class="form-group">
-                <label for="username">Username</label>
-                <InputText id="username" class="form-control" @bind-Value="_model.Username" autocomplete="username" />
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="_model.Email" autocomplete="username" />
             </div>
 
             <div class="form-group">
@@ -30,49 +26,40 @@
                 <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" autocomplete="current-password" />
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Log In</button>
+            <button type="submit" class="btn btn-primary btn-block" disabled="@_signingIn">Log In</button>
         </EditForm>
     </div>
 </section>
 
 @code {
-    [SupplyParameterFromForm]
-    private LoginModel _model { get; set; } = new();
-
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
+    private LoginModel _model = new();
     private string? _error;
+    private bool _signingIn;
 
     private async Task HandleLogin()
     {
-        var expectedUsername = Configuration["AdminUsername"];
-        var expectedPassword = Configuration["AdminPassword"];
-
-        if (string.IsNullOrEmpty(expectedUsername) || string.IsNullOrEmpty(expectedPassword))
+        _error = null;
+        _signingIn = true;
+        try
         {
-            _error = "Admin login is not configured yet. Set AdminUsername/AdminPassword.";
-            return;
-        }
+            var success = await Supabase.SignInAsync(_model.Email, _model.Password);
+            if (!success)
+            {
+                _error = "Invalid email or password.";
+                return;
+            }
 
-        if (_model.Username != expectedUsername || _model.Password != expectedPassword)
+            Navigation.NavigateTo("/admin");
+        }
+        finally
         {
-            _error = "Invalid username or password.";
-            return;
+            _signingIn = false;
         }
-
-        var claims = new List<Claim> { new Claim(ClaimTypes.Name, _model.Username) };
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-        Navigation.NavigateTo("/admin", forceLoad: true);
     }
 
     private class LoginModel
     {
-        public string Username { get; set; } = "";
+        public string Email { get; set; } = "";
         public string Password { get; set; } = "";
     }
 }

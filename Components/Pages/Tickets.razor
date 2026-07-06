@@ -1,6 +1,5 @@
 @page "/tickets"
-@rendermode InteractiveServer
-@inject EventDataService DataService
+@inject SupabaseClient Supabase
 
 <PageTitle>Tickets — Dez Reunion Events</PageTitle>
 
@@ -137,9 +136,9 @@
     [SupplyParameterFromQuery(Name = "event")]
     public int? EventQuery { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _upcoming = DataService.GetUpcomingEvents().ToList();
+        _upcoming = await Supabase.GetUpcomingEventsAsync();
 
         if (EventQuery.HasValue && _upcoming.Any(e => e.Id == EventQuery.Value))
         {

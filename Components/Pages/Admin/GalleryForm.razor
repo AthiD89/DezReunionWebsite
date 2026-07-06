@@ -1,9 +1,6 @@
 @page "/admin/gallery/new"
 @attribute [Authorize]
-@rendermode InteractiveServer
-@inject EventDataService DataService
-@inject SupabaseStorageService StorageService
-@inject TikTokLinkService TikTokService
+@inject SupabaseClient Supabase
 @inject NavigationManager Navigation
 
 <PageTitle>New Gallery Item — Admin</PageTitle>
@@ -65,7 +62,10 @@
                 <div class="form-group">
                     <label for="tiktok">TikTok Video Link</label>
                     <InputText id="tiktok" class="form-control" @bind-Value="_tikTokUrlInput" placeholder="@_tikTokPlaceholder" />
-                    <small>Paste the full link or a shortened vt.tiktok.com link — it'll be resolved automatically on save.</small>
+                    <small>
+                        Paste the full video link (open the share link once in a browser first if you only have a
+                        short vt.tiktok.com one — copy the full address from the tab that opens).
+                    </small>
                 </div>
             }
 
@@ -84,11 +84,11 @@
     private List<EventItem> _events = new();
     private bool _uploading;
     private string? _error;
-    private readonly string _tikTokPlaceholder = "https://www.tiktok.com/@dez.reunion/video/... or a vt.tiktok.com link";
+    private readonly string _tikTokPlaceholder = "https://www.tiktok.com/@dez.reunion/video/1234567890123456789";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _events = DataService.GetAllEvents().ToList();
+        _events = await Supabase.GetAllEventsAsync();
     }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
@@ -99,7 +99,7 @@
         {
             var file = e.File;
             await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-            _model.ImageUrl = await StorageService.UploadImageAsync(stream, file.Name, file.ContentType);
+            _model.ImageUrl = await Supabase.UploadImageAsync(stream, file.Name, file.ContentType);
         }
         catch (Exception ex)
         {
@@ -125,21 +125,15 @@
 
         if (_mediaType == GalleryMediaType.Video)
         {
-            if (string.IsNullOrWhiteSpace(_tikTokUrlInput))
+            var videoId = SupabaseClient.ExtractTikTokVideoId(_tikTokUrlInput.Trim());
+            if (videoId is null)
             {
-                _error = "Please paste a TikTok video link.";
+                _error = "Couldn't find a video ID in that link — make sure it's the full tiktok.com/@.../video/... URL.";
                 return;
             }
 
-            var resolved = await TikTokService.ResolveAsync(_tikTokUrlInput.Trim());
-            if (resolved is null)
-            {
-                _error = "Couldn't resolve that TikTok link — check it's a valid video URL.";
-                return;
-            }
-
-            _model.VideoUrl = resolved.Value.CanonicalUrl;
-            _model.TikTokVideoId = resolved.Value.VideoId;
+            _model.VideoUrl = _tikTokUrlInput.Trim();
+            _model.TikTokVideoId = videoId;
         }
         else if (string.IsNullOrWhiteSpace(_model.ImageUrl))
         {
@@ -147,7 +141,7 @@
             return;
         }
 
-        DataService.AddGalleryItem(_model);
+        await Supabase.AddGalleryItemAsync(_model);
         Navigation.NavigateTo("/admin");
     }
 }

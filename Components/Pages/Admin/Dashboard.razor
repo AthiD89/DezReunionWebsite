@@ -1,7 +1,6 @@
 @page "/admin"
 @attribute [Authorize]
-@rendermode InteractiveServer
-@inject EventDataService DataService
+@inject SupabaseClient Supabase
 
 <PageTitle>Admin Dashboard — Dez Reunion Events</PageTitle>
 
@@ -73,26 +72,26 @@
     private List<EventItem> _events = new();
     private List<GalleryItem> _gallery = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        LoadData();
+        await LoadDataAsync();
     }
 
-    private void LoadData()
+    private async Task LoadDataAsync()
     {
-        _events = DataService.GetAllEvents().ToList();
-        _gallery = DataService.GetGalleryItems().ToList();
+        _events = await Supabase.GetAllEventsAsync();
+        _gallery = await Supabase.GetGalleryItemsAsync();
     }
 
-    private void DeleteEvent(int id)
+    private async Task DeleteEvent(int id)
     {
-        DataService.DeleteEvent(id);
-        LoadData();
+        await Supabase.DeleteEventAsync(id);
+        await LoadDataAsync();
     }
 
-    private void DeleteGalleryItem(int id)
+    private async Task DeleteGalleryItem(int id)
     {
-        DataService.DeleteGalleryItem(id);
-        LoadData();
+        await Supabase.DeleteGalleryItemAsync(id);
+        await LoadDataAsync();
     }
 }

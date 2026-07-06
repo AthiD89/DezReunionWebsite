@@ -1,6 +1,5 @@
 @page "/gallery"
-@rendermode InteractiveServer
-@inject EventDataService DataService
+@inject SupabaseClient Supabase
 
 <PageTitle>Gallery — Dez Reunion Events</PageTitle>
 
@@ -90,10 +89,10 @@
     private List<GalleryItem> _filteredPhotos => Filtered.Where(g => g.Type == GalleryMediaType.Photo).ToList();
     private List<GalleryItem> _filteredVideos => Filtered.Where(g => g.Type == GalleryMediaType.Video).ToList();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _allItems = DataService.GetGalleryItems().ToList();
-        _eventNames = DataService.GetEventNames().ToList();
+        _allItems = await Supabase.GetGalleryItemsAsync();
+        _eventNames = _allItems.Select(g => g.EventName).Distinct().OrderBy(n => n).ToList();
 
         if (!string.IsNullOrWhiteSpace(EventQuery) && _eventNames.Contains(EventQuery))
         {

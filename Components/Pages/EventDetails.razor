@@ -1,5 +1,5 @@
 @page "/events/{Id:int}"
-@inject EventDataService DataService
+@inject SupabaseClient Supabase
 @inject NavigationManager Nav
 
 <PageTitle>@(_event?.Title ?? "Event") — Dez Reunion Events</PageTitle>
@@ -110,8 +110,8 @@ else
 
     private EventItem? _event;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
-        _event = DataService.GetEventById(Id);
+        _event = await Supabase.GetEventByIdAsync(Id);
     }
 }

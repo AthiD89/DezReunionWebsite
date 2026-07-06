@@ -1,10 +1,12 @@
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace DezReunionWebsite.Models;
 
 public class EventItem
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int Id { get; set; }
+
     public string Title { get; set; } = "";
     public DateTime Date { get; set; }
     public string? Time { get; set; }
@@ -17,6 +19,6 @@ public class EventItem
     public string? TicketUrl { get; set; }
     public decimal? Price { get; set; }
 
-    [NotMapped]
+    [JsonIgnore]
     public bool IsPast => Date.Date < DateTime.Today;
 }

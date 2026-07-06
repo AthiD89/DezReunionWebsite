@@ -1,9 +1,7 @@
 @page "/admin/events/new"
 @page "/admin/events/{Id:int}/edit"
 @attribute [Authorize]
-@rendermode InteractiveServer
-@inject EventDataService DataService
-@inject SupabaseStorageService StorageService
+@inject SupabaseClient Supabase
 @inject NavigationManager Navigation
 
 <PageTitle>@(Id.HasValue ? "Edit Event" : "New Event") — Admin</PageTitle>
@@ -110,11 +108,11 @@
     private bool _uploading;
     private string? _error;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (Id.HasValue)
         {
-            var existing = DataService.GetEventById(Id.Value);
+            var existing = await Supabase.GetEventByIdAsync(Id.Value);
             if (existing is null)
             {
                 _notFound = true;
@@ -134,7 +132,7 @@
         {
             var file = e.File;
             await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-            _model.ImageUrl = await StorageService.UploadImageAsync(stream, file.Name, file.ContentType);
+            _model.ImageUrl = await Supabase.UploadImageAsync(stream, file.Name, file.ContentType);
         }
         catch (Exception ex)
         {
@@ -146,7 +144,7 @@
         }
     }
 
-    private void HandleSubmit()
+    private async Task HandleSubmit()
     {
         _model.Time = string.IsNullOrWhiteSpace(_model.Time) ? null : _model.Time;
         _model.DressCode = string.IsNullOrWhiteSpace(_model.DressCode) ? null : _model.DressCode;
@@ -154,11 +152,11 @@
 
         if (Id.HasValue)
         {
-            DataService.UpdateEvent(_model);
+            await Supabase.UpdateEventAsync(_model);
         }
         else
         {
-            DataService.AddEvent(_model);
+            await Supabase.AddEventAsync(_model);
         }
 
         Navigation.NavigateTo("/admin");

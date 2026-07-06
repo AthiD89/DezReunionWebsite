@@ -1,5 +1,5 @@
 @page "/events"
-@inject EventDataService DataService
+@inject SupabaseClient Supabase
 
 <PageTitle>Events — Dez Reunion Events</PageTitle>
 
@@ -87,9 +87,9 @@
     private List<EventItem> _upcoming = new();
     private List<EventItem> _past = new();
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _upcoming = DataService.GetUpcomingEvents().ToList();
-        _past = DataService.GetPastEvents().ToList();
+        _upcoming = await Supabase.GetUpcomingEventsAsync();
+        _past = await Supabase.GetPastEventsAsync();
     }
 }
