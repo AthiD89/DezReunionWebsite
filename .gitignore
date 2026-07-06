@@ -10,3 +10,6 @@ appsettings.Local.json
 run-out.log
 run-err.log
 run.pid
+publish_output/
+.netlify/
+.claude/
