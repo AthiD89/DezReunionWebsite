@@ -22,6 +22,7 @@
             <div class="form-group">
                 <label for="title">Title</label>
                 <InputText id="title" class="form-control" @bind-Value="_model.Title" />
+                <small>Filled in automatically from your file name once you upload below — feel free to change it.</small>
             </div>
 
             <div class="form-group">
@@ -135,6 +136,10 @@
             var file = e.File;
             await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
             _model.ImageUrl = await Supabase.UploadFileAsync(stream, file.Name, file.ContentType);
+            if (string.IsNullOrWhiteSpace(_model.Title))
+            {
+                _model.Title = FileNameToTitle(file.Name);
+            }
         }
         catch (Exception ex)
         {
@@ -155,6 +160,10 @@
             var file = e.File;
             await using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
             _uploadedVideoUrl = await Supabase.UploadFileAsync(stream, file.Name, file.ContentType);
+            if (string.IsNullOrWhiteSpace(_model.Title))
+            {
+                _model.Title = FileNameToTitle(file.Name);
+            }
         }
         catch (Exception ex)
         {
@@ -164,6 +173,15 @@
         {
             _uploading = false;
         }
+    }
+
+    private static string FileNameToTitle(string fileName)
+    {
+        var nameOnly = System.IO.Path.GetFileNameWithoutExtension(fileName);
+        var spaced = nameOnly.Replace('_', ' ').Replace('-', ' ').Trim();
+        return string.IsNullOrWhiteSpace(spaced)
+            ? "Untitled"
+            : System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(spaced.ToLowerInvariant());
     }
 
     private async Task HandleSubmit()
