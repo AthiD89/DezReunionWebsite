@@ -132,7 +132,11 @@ public class SupabaseClient
         request.Content = content;
 
         var response = await _http.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Upload rejected ({(int)response.StatusCode}): {body}");
+        }
 
         return $"{_baseUrl}/storage/v1/object/public/gallery/{uniqueName}";
     }

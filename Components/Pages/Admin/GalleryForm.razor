@@ -2,6 +2,7 @@
 @attribute [Authorize]
 @inject SupabaseClient Supabase
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>New Gallery Item — Admin</PageTitle>
 
@@ -62,9 +63,15 @@
                 <div class="form-group">
                     <label for="tiktok">TikTok Video Link</label>
                     <InputText id="tiktok" class="form-control" @bind-Value="_tikTokUrlInput" placeholder="@_tikTokPlaceholder" />
+                    <div class="flex gap-1" style="margin-top:0.4rem">
+                        <button type="button" class="btn btn-outline btn-sm" @onclick="OpenLinkToResolve">
+                            Open link in a new tab
+                        </button>
+                    </div>
                     <small>
-                        Paste the full video link (open the share link once in a browser first if you only have a
-                        short vt.tiktok.com one — copy the full address from the tab that opens).
+                        Got a short vt.tiktok.com link? Paste it above, click "Open link in a new tab", then copy the
+                        full address from the tab that opens (it'll look like tiktok.com/@@dez.reunion/video/12345...)
+                        and paste that back in here before saving.
                     </small>
                 </div>
             }
@@ -89,6 +96,17 @@
     protected override async Task OnInitializedAsync()
     {
         _events = await Supabase.GetAllEventsAsync();
+    }
+
+    private async Task OpenLinkToResolve()
+    {
+        if (string.IsNullOrWhiteSpace(_tikTokUrlInput))
+        {
+            _error = "Paste a TikTok link first.";
+            return;
+        }
+
+        await JS.InvokeVoidAsync("open", _tikTokUrlInput.Trim(), "_blank");
     }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
