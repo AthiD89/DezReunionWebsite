@@ -1,0 +1,108 @@
+@page "/gallery"
+@rendermode InteractiveServer
+@inject EventDataService DataService
+
+<PageTitle>Gallery — Dez Reunion Events</PageTitle>
+
+<section class="section page-hero">
+    <div class="container text-center">
+        <span class="eyebrow">Memories</span>
+        <h1 class="section-title">Gallery</h1>
+        <p class="section-subtitle">Photos and video moments from Dez Reunion Events past events.</p>
+    </div>
+</section>
+
+<section class="section" style="padding-top:0">
+    <div class="container">
+        <div class="gallery-filters">
+            <button class="filter-chip @(_selectedEvent is null ? "is-active" : "")" @onclick="() => SetFilter(null)">All Events</button>
+            @foreach (var name in _eventNames)
+            {
+                <button class="filter-chip @(_selectedEvent == name ? "is-active" : "")" @onclick="() => SetFilter(name)">@name</button>
+            }
+        </div>
+
+        <div class="gallery-grid">
+            @foreach (var item in _filteredPhotos)
+            {
+                <button class="gallery-thumb" @onclick="() => OpenLightbox(item)" style="background-image: url('@item.ImageUrl')">
+                    <span class="gallery-thumb-label">@item.Title</span>
+                </button>
+            }
+        </div>
+
+        @if (_filteredVideos.Count > 0)
+        {
+            <div class="section-header" style="margin-top:3.5rem">
+                <span class="eyebrow">Videos</span>
+                <h2 class="section-title">Watch the Highlights</h2>
+            </div>
+            <div class="grid grid-3">
+                @foreach (var video in _filteredVideos)
+                {
+                    <div class="card">
+                        @if (!string.IsNullOrWhiteSpace(video.TikTokVideoId))
+                        {
+                            <div class="video-wrap video-wrap-tiktok">
+                                <blockquote class="tiktok-embed" cite="@video.VideoUrl" data-video-id="@video.TikTokVideoId" style="max-width: 100%; min-width: 260px;">
+                                    <section></section>
+                                </blockquote>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="video-wrap">
+                                <iframe src="@video.VideoUrl" title="@video.Title" allowfullscreen loading="lazy"></iframe>
+                            </div>
+                        }
+                        <div class="card-body">
+                            <strong>@video.Title</strong>
+                            <span class="event-meta"><span>@video.EventName</span></span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@if (_lightboxItem is not null)
+{
+    <div class="lightbox" @onclick="CloseLightbox">
+        <button class="lightbox-close" @onclick="CloseLightbox" aria-label="Close">✕</button>
+        <img src="@_lightboxItem.ImageUrl" alt="@_lightboxItem.Title" @onclick:stopPropagation="true" />
+        <p @onclick:stopPropagation="true">@_lightboxItem.Title &middot; @_lightboxItem.EventName</p>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery(Name = "event")]
+    public string? EventQuery { get; set; }
+
+    private List<GalleryItem> _allItems = new();
+    private List<string> _eventNames = new();
+    private string? _selectedEvent;
+    private GalleryItem? _lightboxItem;
+
+    private IEnumerable<GalleryItem> Filtered =>
+        _selectedEvent is null ? _allItems : _allItems.Where(g => g.EventName == _selectedEvent);
+
+    private List<GalleryItem> _filteredPhotos => Filtered.Where(g => g.Type == GalleryMediaType.Photo).ToList();
+    private List<GalleryItem> _filteredVideos => Filtered.Where(g => g.Type == GalleryMediaType.Video).ToList();
+
+    protected override void OnInitialized()
+    {
+        _allItems = DataService.GetGalleryItems().ToList();
+        _eventNames = DataService.GetEventNames().ToList();
+
+        if (!string.IsNullOrWhiteSpace(EventQuery) && _eventNames.Contains(EventQuery))
+        {
+            _selectedEvent = EventQuery;
+        }
+    }
+
+    private void SetFilter(string? name) => _selectedEvent = name;
+
+    private void OpenLightbox(GalleryItem item) => _lightboxItem = item;
+    private void CloseLightbox() => _lightboxItem = null;
+}

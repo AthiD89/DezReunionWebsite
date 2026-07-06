@@ -1,0 +1,117 @@
+@page "/events/{Id:int}"
+@inject EventDataService DataService
+@inject NavigationManager Nav
+
+<PageTitle>@(_event?.Title ?? "Event") — Dez Reunion Events</PageTitle>
+
+@if (_event is null)
+{
+    <section class="section text-center">
+        <div class="container">
+            <h1>Event not found</h1>
+            <p class="section-subtitle">We couldn't find that event.</p>
+            <a href="/events" class="btn btn-primary">Back to Events</a>
+        </div>
+    </section>
+}
+else
+{
+    <section class="detail-hero" style="background-image: url('@_event.ImageUrl')">
+        <div class="detail-hero-overlay">
+            <div class="container">
+                @if (_event.IsPast)
+                {
+                    <span class="badge badge-purple">Past Event</span>
+                }
+                else
+                {
+                    <span class="badge badge-pink">Upcoming</span>
+                }
+                <h1>@_event.Title</h1>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="detail-grid">
+                <div class="detail-main">
+                    <h2>About This Event</h2>
+                    <p>@_event.Description</p>
+
+                    @if (_event.IsPast)
+                    {
+                        <div class="past-note">
+                            <p>This event has already happened. Take a look at the photos in our <a href="@($"/gallery?event={Uri.EscapeDataString(_event.Title)}")">gallery</a>.</p>
+                        </div>
+                    }
+                </div>
+
+                <aside class="detail-sidebar">
+                    <div class="detail-fact">
+                        <span>📅 Date</span>
+                        <strong>@_event.Date.ToString("dddd, dd MMMM yyyy")</strong>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(_event.Time))
+                    {
+                        <div class="detail-fact">
+                            <span>🕒 Time</span>
+                            <strong>@_event.Time</strong>
+                        </div>
+                    }
+                    <div class="detail-fact">
+                        <span>📍 Venue</span>
+                        <strong>@_event.Venue</strong>
+                        <small>@_event.Address</small>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(_event.DressCode))
+                    {
+                        <div class="detail-fact">
+                            <span>👔 Dress Code</span>
+                            <strong>@_event.DressCode</strong>
+                        </div>
+                    }
+                    @if (_event.Price.HasValue)
+                    {
+                        <div class="detail-fact">
+                            <span>🎟️ Price</span>
+                            <strong>R@(_event.Price.Value.ToString("0"))</strong>
+                        </div>
+                    }
+                    else if (!_event.IsPast)
+                    {
+                        <div class="detail-fact">
+                            <span>🎟️ Price</span>
+                            <strong>Free Entry</strong>
+                        </div>
+                    }
+
+                    @if (!_event.IsPast)
+                    {
+                        <a href="@($"/tickets?event={_event.Id}")" class="btn btn-primary btn-block">RSVP / Buy Tickets</a>
+                    }
+                    else
+                    {
+                        <a href="@($"/gallery?event={Uri.EscapeDataString(_event.Title)}")" class="btn btn-outline btn-block">View Photos</a>
+                    }
+                </aside>
+            </div>
+
+            <div class="text-center" style="margin-top:2.5rem">
+                <a href="/events">&larr; Back to All Events</a>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private EventItem? _event;
+
+    protected override void OnParametersSet()
+    {
+        _event = DataService.GetEventById(Id);
+    }
+}

@@ -1,0 +1,93 @@
+@page "/contact"
+@rendermode InteractiveServer
+
+<PageTitle>Contact — Dez Reunion Events</PageTitle>
+
+<section class="section page-hero">
+    <div class="container text-center">
+        <span class="eyebrow">Get In Touch</span>
+        <h1 class="section-title">Contact Us</h1>
+        <p class="section-subtitle">Questions about an event, tickets, or want to partner with us? Reach out.</p>
+    </div>
+</section>
+
+<section class="section" style="padding-top:0">
+    <div class="container">
+        <div class="contact-grid">
+            <div class="contact-links-card">
+                <h2>Reach Us Directly</h2>
+
+                <a class="contact-link whatsapp" href="https://wa.me/27630345239?text=Hi%20Dez%20Reunion%20Events!" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-link-icon">💬</span>
+                    <span>
+                        <strong>WhatsApp</strong>
+                        <small>+27 63 034 5239</small>
+                    </span>
+                </a>
+
+                <a class="contact-link facebook" href="https://www.facebook.com/share/14pqgzZUypM/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-link-icon">📘</span>
+                    <span>
+                        <strong>Facebook</strong>
+                        <small>Dez Reunion Events</small>
+                    </span>
+                </a>
+
+                <a class="contact-link tiktok" href="https://www.tiktok.com/@@dez.reunion?_r=1&amp;_t=ZS-97ngCGtFQyP" target="_blank" rel="noopener noreferrer">
+                    <span class="contact-link-icon">🎵</span>
+                    <span>
+                        <strong>TikTok</strong>
+                        <small>@@dez.reunion</small>
+                    </span>
+                </a>
+            </div>
+
+            <div class="contact-form-card">
+                <h2>Send Us a Message</h2>
+
+                @if (_submitted)
+                {
+                    <div class="form-success">
+                        Thanks @_model.Name! Your message has been received — we'll reply to @_model.Email soon.
+                    </div>
+                }
+                else
+                {
+                    <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group">
+                            <label for="contact-name">Name</label>
+                            <InputText id="contact-name" class="form-control" @bind-Value="_model.Name" />
+                            <ValidationMessage For="() => _model.Name" class="field-error" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact-email">Email</label>
+                            <InputText id="contact-email" class="form-control" @bind-Value="_model.Email" />
+                            <ValidationMessage For="() => _model.Email" class="field-error" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="contact-message">Message</label>
+                            <InputTextArea id="contact-message" class="form-control" rows="5" @bind-Value="_model.Message" />
+                            <ValidationMessage For="() => _model.Message" class="field-error" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+                    </EditForm>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private ContactMessage _model = new();
+    private bool _submitted;
+
+    private void HandleSubmit()
+    {
+        _submitted = true;
+    }
+}

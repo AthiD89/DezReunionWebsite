@@ -1,0 +1,95 @@
+@page "/events"
+@inject EventDataService DataService
+
+<PageTitle>Events — Dez Reunion Events</PageTitle>
+
+<section class="section page-hero">
+    <div class="container text-center">
+        <span class="eyebrow">What's On</span>
+        <h1 class="section-title">Upcoming Events</h1>
+        <p class="section-subtitle">Save the date — here's what's coming up next from Dez Reunion Events.</p>
+    </div>
+</section>
+
+<section class="section" style="padding-top:0">
+    <div class="container">
+        @if (_upcoming.Count == 0)
+        {
+            <div class="empty-state text-center">
+                <p>No upcoming events right now — but we're always planning the next one.</p>
+                <a href="https://wa.me/27630345239" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    Join our WhatsApp for updates
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="grid grid-3">
+                @foreach (var evt in _upcoming)
+                {
+                    <div class="card event-card">
+                        <div class="card-media" style="background-image: url('@evt.ImageUrl')"></div>
+                        <div class="card-body">
+                            <span class="badge badge-teal">@evt.Date.ToString("dd MMM yyyy")</span>
+                            <h3>@evt.Title</h3>
+                            <div class="event-meta">
+                                @if (!string.IsNullOrWhiteSpace(evt.Time))
+                                {
+                                    <span>🕒 @evt.Time</span>
+                                }
+                                <span>📍 @evt.Venue</span>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(evt.DressCode))
+                            {
+                                <div class="event-meta">
+                                    <span>👔 @evt.DressCode</span>
+                                </div>
+                            }
+                            <p>@evt.Summary</p>
+                            <div class="flex gap-1 flex-wrap" style="margin-top:auto">
+                                <a href="@($"/events/{evt.Id}")" class="btn btn-outline btn-sm">Details</a>
+                                <a href="@($"/tickets?event={evt.Id}")" class="btn btn-primary btn-sm">@(string.IsNullOrWhiteSpace(evt.TicketUrl) ? "RSVP" : "Get Tickets")</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section class="section past-events">
+    <div class="container">
+        <div class="section-header">
+            <span class="eyebrow">Throwback</span>
+            <h2 class="section-title">Past Events</h2>
+            <p class="section-subtitle">A look back at the reunions that brought us here.</p>
+        </div>
+        <div class="grid grid-4">
+            @foreach (var evt in _past)
+            {
+                <a href="@($"/events/{evt.Id}")" class="past-event-card">
+                    <div class="past-event-media" style="background-image: url('@evt.ImageUrl')"></div>
+                    <div class="past-event-info">
+                        <strong>@evt.Title</strong>
+                        <span>@evt.Date.ToString("MMMM yyyy")</span>
+                    </div>
+                </a>
+            }
+        </div>
+        <div class="text-center" style="margin-top:2.5rem">
+            <a href="/gallery" class="btn btn-outline">Browse Full Photo Gallery</a>
+        </div>
+    </div>
+</section>
+
+@code {
+    private List<EventItem> _upcoming = new();
+    private List<EventItem> _past = new();
+
+    protected override void OnInitialized()
+    {
+        _upcoming = DataService.GetUpcomingEvents().ToList();
+        _past = DataService.GetPastEvents().ToList();
+    }
+}

@@ -1,0 +1,153 @@
+@page "/admin/gallery/new"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject EventDataService DataService
+@inject SupabaseStorageService StorageService
+@inject TikTokLinkService TikTokService
+@inject NavigationManager Navigation
+
+<PageTitle>New Gallery Item — Admin</PageTitle>
+
+<section class="section section-narrow">
+    <div class="container">
+        <span class="eyebrow">Admin</span>
+        <h1 class="section-title">New Gallery Item</h1>
+
+        @if (_error is not null)
+        {
+            <p class="field-error">@_error</p>
+        }
+
+        <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label for="title">Title</label>
+                <InputText id="title" class="form-control" @bind-Value="_model.Title" />
+            </div>
+
+            <div class="form-group">
+                <label for="event">Event</label>
+                <InputSelect id="event" class="form-control" @bind-Value="_model.EventName">
+                    <option value="">Select an event</option>
+                    @foreach (var evt in _events)
+                    {
+                        <option value="@evt.Title">@evt.Title</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="form-group">
+                <label>Media Type</label>
+                <div class="flex gap-2">
+                    <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Photo)" @onchange="@(() => { _mediaType = GalleryMediaType.Photo; })" /> Photo</label>
+                    <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Video)" @onchange="@(() => { _mediaType = GalleryMediaType.Video; })" /> TikTok Video</label>
+                </div>
+            </div>
+
+            @if (_mediaType == GalleryMediaType.Photo)
+            {
+                <div class="form-group">
+                    <label for="photo">Photo</label>
+                    <InputFile id="photo" OnChange="HandleFileSelected" accept="image/*" />
+                    @if (_uploading)
+                    {
+                        <small>Uploading...</small>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_model.ImageUrl))
+                    {
+                        <small>Uploaded ✓</small>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="form-group">
+                    <label for="tiktok">TikTok Video Link</label>
+                    <InputText id="tiktok" class="form-control" @bind-Value="_tikTokUrlInput" placeholder="@_tikTokPlaceholder" />
+                    <small>Paste the full link or a shortened vt.tiktok.com link — it'll be resolved automatically on save.</small>
+                </div>
+            }
+
+            <div class="flex gap-1">
+                <button type="submit" class="btn btn-primary" disabled="@_uploading">Save</button>
+                <a href="/admin" class="btn btn-outline">Cancel</a>
+            </div>
+        </EditForm>
+    </div>
+</section>
+
+@code {
+    private GalleryItem _model = new();
+    private GalleryMediaType _mediaType = GalleryMediaType.Photo;
+    private string _tikTokUrlInput = "";
+    private List<EventItem> _events = new();
+    private bool _uploading;
+    private string? _error;
+    private readonly string _tikTokPlaceholder = "https://www.tiktok.com/@dez.reunion/video/... or a vt.tiktok.com link";
+
+    protected override void OnInitialized()
+    {
+        _events = DataService.GetAllEvents().ToList();
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        _error = null;
+        _uploading = true;
+        try
+        {
+            var file = e.File;
+            await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            _model.ImageUrl = await StorageService.UploadImageAsync(stream, file.Name, file.ContentType);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Photo upload failed: {ex.Message}";
+        }
+        finally
+        {
+            _uploading = false;
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        _error = null;
+
+        if (string.IsNullOrWhiteSpace(_model.EventName))
+        {
+            _error = "Please select an event.";
+            return;
+        }
+
+        _model.Type = _mediaType;
+
+        if (_mediaType == GalleryMediaType.Video)
+        {
+            if (string.IsNullOrWhiteSpace(_tikTokUrlInput))
+            {
+                _error = "Please paste a TikTok video link.";
+                return;
+            }
+
+            var resolved = await TikTokService.ResolveAsync(_tikTokUrlInput.Trim());
+            if (resolved is null)
+            {
+                _error = "Couldn't resolve that TikTok link — check it's a valid video URL.";
+                return;
+            }
+
+            _model.VideoUrl = resolved.Value.CanonicalUrl;
+            _model.TikTokVideoId = resolved.Value.VideoId;
+        }
+        else if (string.IsNullOrWhiteSpace(_model.ImageUrl))
+        {
+            _error = "Please upload a photo.";
+            return;
+        }
+
+        DataService.AddGalleryItem(_model);
+        Navigation.NavigateTo("/admin");
+    }
+}

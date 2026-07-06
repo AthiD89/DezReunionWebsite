@@ -1,0 +1,41 @@
+.admin-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+}
+
+.admin-table {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.admin-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--clr-surface);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    flex-wrap: wrap;
+}
+
+.admin-row-info {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.admin-row-info strong {
+    color: var(--clr-text);
+}
+
+.admin-row-info span {
+    color: var(--clr-text-dim);
+    font-size: 0.9rem;
+}

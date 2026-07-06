@@ -1,0 +1,66 @@
+.page-hero {
+    padding-bottom: 2rem;
+}
+
+.ticket-card {
+    height: 100%;
+}
+
+.ticket-price {
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--clr-text);
+    margin: 0.2rem 0;
+}
+
+.ticket-price span {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--clr-text-dim);
+}
+
+.rsvp-section {
+    background: var(--clr-bg-alt);
+    border-radius: var(--radius);
+}
+
+.rsvp-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+
+.rsvp-form-card {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    padding: 2rem;
+}
+
+.rsvp-form-card h2 {
+    text-align: left;
+}
+
+.qr-card {
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.qr-sample {
+    width: 160px;
+    height: 160px;
+    border-radius: var(--radius-sm);
+}
+
+@media (max-width: 860px) {
+    .rsvp-grid {
+        grid-template-columns: 1fr;
+    }
+}

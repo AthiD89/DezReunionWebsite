@@ -1,0 +1,119 @@
+@page "/"
+@inject EventDataService DataService
+
+<PageTitle>Dez Reunion Events — Celebrate. Connect. Dance.</PageTitle>
+
+<section class="hero">
+    <div class="hero-bg" style="background-image: url('/images/hero-1.svg')"></div>
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+        <span class="eyebrow">🌈 Welcome to Dez Reunion Events</span>
+        <h1 class="hero-title">Celebrate. Connect. <span class="grad-text">Dance.</span></h1>
+        <p class="hero-subtitle">
+            Dez Reunion Events brings our community back together — for a night of music, memories and
+            dancing with the people who matter most.
+        </p>
+        <div class="hero-actions">
+            <a href="/events" class="btn btn-primary">See Upcoming Events</a>
+            <a href="/tickets" class="btn btn-outline">Get Tickets</a>
+        </div>
+    </div>
+</section>
+
+@if (_nextEvent is not null)
+{
+    <section class="section next-event">
+        <div class="container">
+            <div class="next-event-card">
+                <div class="next-event-media" style="background-image: url('@_nextEvent.ImageUrl')"></div>
+                <div class="next-event-body">
+                    <span class="badge badge-pink">Next Up</span>
+                    <h2>@_nextEvent.Title</h2>
+                    <div class="event-meta">
+                        <span>📅 @_nextEvent.Date.ToString("dddd, dd MMMM yyyy")</span>
+                        <span>🕒 @_nextEvent.Time</span>
+                        <span>📍 @_nextEvent.Venue</span>
+                    </div>
+                    <p>@_nextEvent.Summary</p>
+                    <div class="flex gap-1 flex-wrap">
+                        <a href="@($"/events/{_nextEvent.Id}")" class="btn btn-primary btn-sm">Event Details</a>
+                        <a href="@($"/tickets?event={_nextEvent.Id}")" class="btn btn-outline btn-sm">RSVP / Buy Tickets</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+<section class="section highlights">
+    <div class="container">
+        <div class="section-header">
+            <span class="eyebrow">Why Dez Reunion Events</span>
+            <h2 class="section-title">Made for reconnecting</h2>
+            <p class="section-subtitle">Every event is built around good music, good food and genuine reunions.</p>
+        </div>
+        <div class="grid grid-3">
+            <div class="card highlight-card">
+                <div class="card-body text-center">
+                    <div class="highlight-icon">🎶</div>
+                    <h3>Live DJs &amp; Dancing</h3>
+                    <p>A dance floor that stays full from the first song to the last.</p>
+                </div>
+            </div>
+            <div class="card highlight-card">
+                <div class="card-body text-center">
+                    <div class="highlight-icon">🤝</div>
+                    <h3>Old Friends, New Memories</h3>
+                    <p>Reconnect with the people who shaped your story, and meet a few new ones.</p>
+                </div>
+            </div>
+            <div class="card highlight-card">
+                <div class="card-body text-center">
+                    <div class="highlight-icon">🍽️</div>
+                    <h3>Good Food &amp; Good Vibes</h3>
+                    <p>Every event comes with great food, a full bar, and an atmosphere to match.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section gallery-preview">
+    <div class="container">
+        <div class="section-header">
+            <span class="eyebrow">Relive the Moments</span>
+            <h2 class="section-title">From our last few events</h2>
+        </div>
+        <div class="preview-strip">
+            @foreach (var item in _previewGallery)
+            {
+                <div class="preview-thumb" style="background-image: url('@item.ImageUrl')"></div>
+            }
+        </div>
+        <div class="text-center" style="margin-top:2rem">
+            <a href="/gallery" class="btn btn-outline">View Full Gallery</a>
+        </div>
+    </div>
+</section>
+
+<section class="section cta-banner">
+    <div class="container text-center">
+        <h2>Don't miss out on Dez Reunion Events</h2>
+        <p class="section-subtitle">Grab your ticket now — our events sell out fast.</p>
+        <a href="/tickets" class="btn btn-primary">Get Your Tickets</a>
+    </div>
+</section>
+
+@code {
+    private EventItem? _nextEvent;
+    private List<GalleryItem> _previewGallery = new();
+
+    protected override void OnInitialized()
+    {
+        _nextEvent = DataService.GetUpcomingEvents().FirstOrDefault();
+        _previewGallery = DataService.GetGalleryItems()
+            .Where(g => g.Type == GalleryMediaType.Photo)
+            .Take(6)
+            .ToList();
+    }
+}

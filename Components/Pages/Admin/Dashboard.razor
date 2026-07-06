@@ -1,0 +1,98 @@
+@page "/admin"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject EventDataService DataService
+
+<PageTitle>Admin Dashboard — Dez Reunion Events</PageTitle>
+
+<section class="section">
+    <div class="container">
+        <div class="admin-header">
+            <div>
+                <span class="eyebrow">Admin</span>
+                <h1 class="section-title">Dashboard</h1>
+            </div>
+            <div class="flex gap-1 flex-wrap">
+                <a href="/admin/events/new" class="btn btn-primary btn-sm">+ New Event</a>
+                <a href="/admin/gallery/new" class="btn btn-outline btn-sm">+ New Gallery Item</a>
+            </div>
+        </div>
+
+        <h2>Events</h2>
+        <div class="admin-table">
+            @foreach (var evt in _events)
+            {
+                <div class="admin-row">
+                    <div class="admin-row-info">
+                        <strong>@evt.Title</strong>
+                        <span>@evt.Date.ToString("dd MMM yyyy") &middot; @evt.Venue</span>
+                        @if (evt.IsPast)
+                        {
+                            <span class="badge badge-purple">Past</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-pink">Upcoming</span>
+                        }
+                    </div>
+                    <div class="flex gap-1">
+                        <a href="@($"/admin/events/{evt.Id}/edit")" class="btn btn-outline btn-sm">Edit</a>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteEvent(evt.Id)">Delete</button>
+                    </div>
+                </div>
+            }
+            @if (_events.Count == 0)
+            {
+                <p class="section-subtitle">No events yet.</p>
+            }
+        </div>
+
+        <h2 style="margin-top:3rem">Gallery Items</h2>
+        <div class="admin-table">
+            @foreach (var item in _gallery)
+            {
+                <div class="admin-row">
+                    <div class="admin-row-info">
+                        <strong>@item.Title</strong>
+                        <span>@item.EventName &middot; @item.Type</span>
+                    </div>
+                    <div class="flex gap-1">
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteGalleryItem(item.Id)">Delete</button>
+                    </div>
+                </div>
+            }
+            @if (_gallery.Count == 0)
+            {
+                <p class="section-subtitle">No gallery items yet.</p>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private List<EventItem> _events = new();
+    private List<GalleryItem> _gallery = new();
+
+    protected override void OnInitialized()
+    {
+        LoadData();
+    }
+
+    private void LoadData()
+    {
+        _events = DataService.GetAllEvents().ToList();
+        _gallery = DataService.GetGalleryItems().ToList();
+    }
+
+    private void DeleteEvent(int id)
+    {
+        DataService.DeleteEvent(id);
+        LoadData();
+    }
+
+    private void DeleteGalleryItem(int id)
+    {
+        DataService.DeleteGalleryItem(id);
+        LoadData();
+    }
+}

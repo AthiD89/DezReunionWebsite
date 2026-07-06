@@ -1,0 +1,16 @@
+﻿<Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <div class="section text-center">
+                    <div class="container">
+                        <h1>Admin Access Required</h1>
+                        <p class="section-subtitle">Please log in to continue.</p>
+                        <a href="/admin/login" class="btn btn-primary">Go to Login</a>
+                    </div>
+                </div>
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

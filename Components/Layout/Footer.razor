@@ -1,0 +1,42 @@
+<footer class="site-footer">
+    <div class="site-footer-inner">
+        <div class="footer-brand">
+            <span class="brand-mark">🌈</span>
+            <span class="brand-name">Dez Reunion Events</span>
+            <p>Celebrate. Connect. Dance.</p>
+        </div>
+
+        <div class="footer-col">
+            <h4>Explore</h4>
+            <a href="/events">Events</a>
+            <a href="/gallery">Gallery</a>
+            <a href="/about">About Us</a>
+            <a href="/tickets">Tickets</a>
+        </div>
+
+        <div class="footer-col">
+            <h4>Connect</h4>
+            <a href="https://wa.me/27630345239" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            <a href="https://www.facebook.com/share/14pqgzZUypM/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer">Facebook</a>
+            <a href="https://www.tiktok.com/@@dez.reunion?_r=1&amp;_t=ZS-97ngCGtFQyP" target="_blank" rel="noopener noreferrer">TikTok</a>
+            <a href="/contact">Contact Us</a>
+        </div>
+    </div>
+
+    <div class="site-footer-bottom">
+        <p>&copy; @DateTime.Now.Year Dez Reunion Events. Made with 🌈 for our community.</p>
+        <AuthorizeView>
+            <Authorized>
+                <p class="admin-link">
+                    <a href="/admin">Admin Dashboard</a> &middot;
+                    <form method="post" action="/admin/logout" class="logout-form">
+                        <button type="submit">Log Out</button>
+                    </form>
+                </p>
+            </Authorized>
+            <NotAuthorized>
+                <p class="admin-link"><a href="/admin/login">Admin</a></p>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</footer>

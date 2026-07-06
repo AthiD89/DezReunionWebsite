@@ -1,0 +1,166 @@
+@page "/admin/events/new"
+@page "/admin/events/{Id:int}/edit"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@inject EventDataService DataService
+@inject SupabaseStorageService StorageService
+@inject NavigationManager Navigation
+
+<PageTitle>@(Id.HasValue ? "Edit Event" : "New Event") — Admin</PageTitle>
+
+<section class="section section-narrow">
+    <div class="container">
+        <span class="eyebrow">Admin</span>
+        <h1 class="section-title">@(Id.HasValue ? "Edit Event" : "New Event")</h1>
+
+        @if (_notFound)
+        {
+            <p class="field-error">Event not found.</p>
+        }
+        else
+        {
+            @if (_error is not null)
+            {
+                <p class="field-error">@_error</p>
+            }
+
+            <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <InputText id="title" class="form-control" @bind-Value="_model.Title" />
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <InputDate id="date" class="form-control" @bind-Value="_model.Date" />
+                </div>
+
+                <div class="form-group">
+                    <label for="time">Time (optional, e.g. 12:00 - 21:00)</label>
+                    <InputText id="time" class="form-control" @bind-Value="_model.Time" />
+                </div>
+
+                <div class="form-group">
+                    <label for="venue">Venue</label>
+                    <InputText id="venue" class="form-control" @bind-Value="_model.Venue" />
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Address</label>
+                    <InputText id="address" class="form-control" @bind-Value="_model.Address" />
+                </div>
+
+                <div class="form-group">
+                    <label for="dresscode">Dress Code (optional)</label>
+                    <InputText id="dresscode" class="form-control" @bind-Value="_model.DressCode" />
+                </div>
+
+                <div class="form-group">
+                    <label for="summary">Short Summary</label>
+                    <InputText id="summary" class="form-control" @bind-Value="_model.Summary" />
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Full Description</label>
+                    <InputTextArea id="description" class="form-control" rows="5" @bind-Value="_model.Description" />
+                </div>
+
+                <div class="form-group">
+                    <label for="photo">Event Photo</label>
+                    <InputFile id="photo" OnChange="HandleFileSelected" accept="image/*" />
+                    @if (_uploading)
+                    {
+                        <small>Uploading...</small>
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="imageurl">Image URL</label>
+                    <InputText id="imageurl" class="form-control" @bind-Value="_model.ImageUrl" />
+                    <small>Set automatically after uploading a photo above, or paste a direct image URL.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="ticketurl">Quicket / Ticket URL (optional)</label>
+                    <InputText id="ticketurl" class="form-control" @bind-Value="_model.TicketUrl" />
+                </div>
+
+                <div class="form-group">
+                    <label for="price">Price in Rand (optional — leave blank for free entry)</label>
+                    <InputNumber id="price" class="form-control" @bind-Value="_model.Price" />
+                </div>
+
+                <div class="flex gap-1">
+                    <button type="submit" class="btn btn-primary" disabled="@_uploading">Save Event</button>
+                    <a href="/admin" class="btn btn-outline">Cancel</a>
+                </div>
+            </EditForm>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private EventItem _model = new() { Date = DateTime.Today };
+    private bool _notFound;
+    private bool _uploading;
+    private string? _error;
+
+    protected override void OnParametersSet()
+    {
+        if (Id.HasValue)
+        {
+            var existing = DataService.GetEventById(Id.Value);
+            if (existing is null)
+            {
+                _notFound = true;
+            }
+            else
+            {
+                _model = existing;
+            }
+        }
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        _error = null;
+        _uploading = true;
+        try
+        {
+            var file = e.File;
+            await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            _model.ImageUrl = await StorageService.UploadImageAsync(stream, file.Name, file.ContentType);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Photo upload failed: {ex.Message}";
+        }
+        finally
+        {
+            _uploading = false;
+        }
+    }
+
+    private void HandleSubmit()
+    {
+        _model.Time = string.IsNullOrWhiteSpace(_model.Time) ? null : _model.Time;
+        _model.DressCode = string.IsNullOrWhiteSpace(_model.DressCode) ? null : _model.DressCode;
+        _model.TicketUrl = string.IsNullOrWhiteSpace(_model.TicketUrl) ? null : _model.TicketUrl;
+
+        if (Id.HasValue)
+        {
+            DataService.UpdateEvent(_model);
+        }
+        else
+        {
+            DataService.AddEvent(_model);
+        }
+
+        Navigation.NavigateTo("/admin");
+    }
+}

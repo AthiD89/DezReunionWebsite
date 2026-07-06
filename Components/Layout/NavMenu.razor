@@ -1,0 +1,32 @@
+@rendermode InteractiveServer
+
+<header class="site-header">
+    <div class="site-header-inner">
+        <a href="/" class="brand" @onclick="CloseMenu">
+            <span class="brand-mark">🌈</span>
+            <span class="brand-name">Dez Reunion Events</span>
+        </a>
+
+        <button class="nav-toggle" type="button" @onclick="ToggleMenu" aria-label="Toggle navigation" aria-expanded="@_isOpen">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav class="site-nav @(_isOpen ? "is-open" : "")">
+            <NavLink href="/" Match="NavLinkMatch.All" @onclick="CloseMenu">Home</NavLink>
+            <NavLink href="/events" @onclick="CloseMenu">Events</NavLink>
+            <NavLink href="/gallery" @onclick="CloseMenu">Gallery</NavLink>
+            <NavLink href="/about" @onclick="CloseMenu">About</NavLink>
+            <NavLink href="/contact" @onclick="CloseMenu">Contact</NavLink>
+            <a href="/tickets" class="btn btn-primary btn-sm nav-cta" @onclick="CloseMenu">Get Tickets</a>
+        </nav>
+    </div>
+</header>
+
+@code {
+    private bool _isOpen;
+
+    private void ToggleMenu() => _isOpen = !_isOpen;
+    private void CloseMenu() => _isOpen = false;
+}

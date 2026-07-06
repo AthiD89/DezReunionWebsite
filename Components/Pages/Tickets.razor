@@ -1,0 +1,156 @@
+@page "/tickets"
+@rendermode InteractiveServer
+@inject EventDataService DataService
+
+<PageTitle>Tickets — Dez Reunion Events</PageTitle>
+
+<section class="section page-hero">
+    <div class="container text-center">
+        <span class="eyebrow">Don't Miss Out</span>
+        <h1 class="section-title">Tickets &amp; RSVP</h1>
+        <p class="section-subtitle">Grab your spot at the next Dez Reunion Events gathering — book online or RSVP below.</p>
+    </div>
+</section>
+
+<section class="section" style="padding-top:0">
+    <div class="container">
+        @if (_upcoming.Count == 0)
+        {
+            <p class="text-center">No events are open for booking right now — check back soon.</p>
+        }
+        else
+        {
+            <div class="grid grid-3">
+                @foreach (var evt in _upcoming)
+                {
+                    <div class="card ticket-card">
+                        <div class="card-media" style="background-image: url('@evt.ImageUrl')"></div>
+                        <div class="card-body">
+                            <h3>@evt.Title</h3>
+                            <div class="event-meta">
+                                <span>📅 @evt.Date.ToString("dd MMM yyyy")</span>
+                            </div>
+                            @if (evt.Price.HasValue)
+                            {
+                                <p class="ticket-price">R@(evt.Price.Value.ToString("0")) <span>per person</span></p>
+                            }
+                            else
+                            {
+                                <p class="ticket-price">Free Entry</p>
+                            }
+                            <div class="flex gap-1 flex-wrap" style="margin-top:auto">
+                                @if (!string.IsNullOrWhiteSpace(evt.TicketUrl))
+                                {
+                                    <a href="@evt.TicketUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Buy Now</a>
+                                    <a href="@($"#rsvp")" class="btn btn-outline btn-sm" @onclick="() => SelectEvent(evt.Id)">RSVP Instead</a>
+                                }
+                                else
+                                {
+                                    <a href="@($"#rsvp")" class="btn btn-primary btn-sm" @onclick="() => SelectEvent(evt.Id)">RSVP Now</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section class="section rsvp-section" id="rsvp">
+    <div class="container">
+        <div class="rsvp-grid">
+            <div class="rsvp-form-card">
+                <h2>RSVP</h2>
+                <p class="section-subtitle" style="text-align:left">Prefer to reserve your spot without paying online? Fill this in and we'll be in touch.</p>
+
+                @if (_submitted)
+                {
+                    <div class="form-success">
+                        Thanks @_model.Name! Your RSVP for
+                        "@(_upcoming.FirstOrDefault(e => e.Id == _model.EventId)?.Title ?? "the event")"
+                        has been received. We'll email your confirmation and QR ticket to @_model.Email shortly.
+                    </div>
+                }
+                else
+                {
+                    <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-group">
+                            <label for="rsvp-name">Full Name</label>
+                            <InputText id="rsvp-name" class="form-control" @bind-Value="_model.Name" />
+                            <ValidationMessage For="() => _model.Name" class="field-error" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rsvp-email">Email</label>
+                            <InputText id="rsvp-email" class="form-control" @bind-Value="_model.Email" />
+                            <ValidationMessage For="() => _model.Email" class="field-error" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rsvp-phone">Phone (optional)</label>
+                            <InputText id="rsvp-phone" class="form-control" @bind-Value="_model.Phone" />
+                            <ValidationMessage For="() => _model.Phone" class="field-error" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rsvp-event">Event</label>
+                            <InputSelect id="rsvp-event" class="form-control" @bind-Value="_model.EventId">
+                                <option value="">Select an event</option>
+                                @foreach (var evt in _upcoming)
+                                {
+                                    <option value="@evt.Id">@evt.Title — @evt.Date.ToString("dd MMM yyyy")</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="rsvp-guests">Number of Guests</label>
+                            <InputNumber id="rsvp-guests" class="form-control" @bind-Value="_model.Guests" />
+                            <ValidationMessage For="() => _model.Guests" class="field-error" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Confirm RSVP</button>
+                    </EditForm>
+                }
+            </div>
+
+            <div class="qr-card">
+                <h3>Your Ticket, Ready to Scan</h3>
+                <img src="/images/qr-placeholder.svg" alt="Sample QR ticket" class="qr-sample" />
+                <p>
+                    Once you book online or RSVP, we'll email you a unique QR code ticket.
+                    Just show it on your phone at the door for fast, contactless entry — no printing required.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@code {
+    private List<EventItem> _upcoming = new();
+    private RsvpRequest _model = new();
+    private bool _submitted;
+
+    [SupplyParameterFromQuery(Name = "event")]
+    public int? EventQuery { get; set; }
+
+    protected override void OnInitialized()
+    {
+        _upcoming = DataService.GetUpcomingEvents().ToList();
+
+        if (EventQuery.HasValue && _upcoming.Any(e => e.Id == EventQuery.Value))
+        {
+            _model.EventId = EventQuery.Value;
+        }
+    }
+
+    private void SelectEvent(int id) => _model.EventId = id;
+
+    private void HandleSubmit()
+    {
+        _submitted = true;
+    }
+}

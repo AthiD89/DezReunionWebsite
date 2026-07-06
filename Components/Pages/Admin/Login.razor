@@ -1,0 +1,78 @@
+@page "/admin/login"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+
+<PageTitle>Admin Login — Dez Reunion Events</PageTitle>
+
+<section class="section">
+    <div class="container section-narrow" style="max-width:420px">
+        <h1 class="text-center">Admin Login</h1>
+
+        @if (_error is not null)
+        {
+            <p class="field-error text-center">@_error</p>
+        }
+
+        <EditForm Model="_model" FormName="admin-login" OnValidSubmit="HandleLogin" method="post">
+            <DataAnnotationsValidator />
+            <AntiforgeryToken />
+
+            <div class="form-group">
+                <label for="username">Username</label>
+                <InputText id="username" class="form-control" @bind-Value="_model.Username" autocomplete="username" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="_model.Password" autocomplete="current-password" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Log In</button>
+        </EditForm>
+    </div>
+</section>
+
+@code {
+    [SupplyParameterFromForm]
+    private LoginModel _model { get; set; } = new();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private string? _error;
+
+    private async Task HandleLogin()
+    {
+        var expectedUsername = Configuration["AdminUsername"];
+        var expectedPassword = Configuration["AdminPassword"];
+
+        if (string.IsNullOrEmpty(expectedUsername) || string.IsNullOrEmpty(expectedPassword))
+        {
+            _error = "Admin login is not configured yet. Set AdminUsername/AdminPassword.";
+            return;
+        }
+
+        if (_model.Username != expectedUsername || _model.Password != expectedPassword)
+        {
+            _error = "Invalid username or password.";
+            return;
+        }
+
+        var claims = new List<Claim> { new Claim(ClaimTypes.Name, _model.Username) };
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+        Navigation.NavigateTo("/admin", forceLoad: true);
+    }
+
+    private class LoginModel
+    {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

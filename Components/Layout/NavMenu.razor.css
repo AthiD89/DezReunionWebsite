@@ -1,0 +1,127 @@
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(18, 12, 30, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    font-family: "Poppins", sans-serif;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--clr-text);
+}
+
+.brand-mark {
+    font-size: 1.6rem;
+}
+
+.brand-name {
+    background: var(--gradient-rainbow);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.site-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+}
+
+.site-nav :deep(a) {
+    color: var(--clr-text-dim);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0.4rem 0;
+    transition: color 0.15s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.site-nav :deep(a:hover) {
+    color: var(--clr-text);
+}
+
+.site-nav :deep(a.active) {
+    color: var(--clr-text);
+    border-bottom-color: var(--clr-pink);
+}
+
+.nav-cta.nav-cta {
+    border-bottom: none;
+    padding: 0.55rem 1.2rem;
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 38px;
+    height: 38px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.nav-toggle span {
+    display: block;
+    height: 2px;
+    width: 18px;
+    margin: 0 auto;
+    background: var(--clr-text);
+    border-radius: 2px;
+}
+
+@media (max-width: 860px) {
+    .nav-toggle {
+        display: flex;
+    }
+
+    .site-nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        background: var(--clr-bg-alt);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+    }
+
+    .site-nav.is-open {
+        max-height: 400px;
+    }
+
+    .site-nav :deep(a) {
+        padding: 0.9rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-cta.nav-cta {
+        margin: 0.9rem 1.5rem;
+    }
+}

@@ -1,0 +1,132 @@
+.hero {
+    position: relative;
+    min-height: 88vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.05);
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(18, 12, 30, 0.55) 0%, rgba(18, 12, 30, 0.85) 85%, var(--clr-bg) 100%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+}
+
+.hero-title {
+    font-size: clamp(2.6rem, 6vw, 4.2rem);
+    margin-bottom: 1rem;
+}
+
+.grad-text {
+    background: var(--gradient-rainbow);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.hero-subtitle {
+    font-size: 1.15rem;
+    max-width: 560px;
+    margin-bottom: 2rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.next-event {
+    padding-top: 0;
+}
+
+.next-event-card {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    background: var(--clr-surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.next-event-media {
+    background-size: cover;
+    background-position: center;
+    min-height: 260px;
+}
+
+.next-event-body {
+    padding: 2.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.next-event-body h2 {
+    margin: 0.2rem 0;
+}
+
+@media (max-width: 760px) {
+    .next-event-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+.highlight-icon {
+    font-size: 2.4rem;
+    margin-bottom: 0.5rem;
+}
+
+.preview-strip {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+}
+
+.preview-thumb {
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    background-size: cover;
+    background-position: center;
+    box-shadow: var(--shadow);
+}
+
+@media (max-width: 860px) {
+    .preview-strip {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.cta-banner {
+    background: var(--gradient-cta);
+    border-radius: var(--radius);
+    max-width: 1200px;
+    margin: 0 auto 4rem;
+    padding: 3.5rem 2rem;
+}
+
+.cta-banner h2, .cta-banner .section-subtitle {
+    color: white;
+}
+
+.cta-banner .btn-primary {
+    background: white;
+    color: var(--clr-purple);
+    box-shadow: none;
+}
