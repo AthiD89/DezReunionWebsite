@@ -39,7 +39,7 @@
                 <label>Media Type</label>
                 <div class="flex gap-2">
                     <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Photo)" @onchange="@(() => { _mediaType = GalleryMediaType.Photo; })" /> Photo</label>
-                    <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Video)" @onchange="@(() => { _mediaType = GalleryMediaType.Video; })" /> TikTok Video</label>
+                    <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Video)" @onchange="@(() => { _mediaType = GalleryMediaType.Video; })" /> Video</label>
                 </div>
             </div>
 
@@ -61,17 +61,18 @@
             else
             {
                 <div class="form-group">
-                    <label for="tiktok">TikTok Video Link</label>
-                    <InputText id="tiktok" class="form-control" @bind-Value="_tikTokUrlInput" placeholder="@_tikTokPlaceholder" />
+                    <label for="videolink">Video Link</label>
+                    <InputText id="videolink" class="form-control" @bind-Value="_videoUrlInput" placeholder="@_videoPlaceholder" />
                     <div class="flex gap-1" style="margin-top:0.4rem">
                         <button type="button" class="btn btn-outline btn-sm" @onclick="OpenLinkToResolve">
                             Open link in a new tab
                         </button>
                     </div>
                     <small>
-                        Got a short vt.tiktok.com link? Paste it above, click "Open link in a new tab", then copy the
-                        full address from the tab that opens (it'll look like tiktok.com/@@dez.reunion/video/12345...)
-                        and paste that back in here before saving.
+                        Works with TikTok and YouTube links — just paste them in. Got a shortened link (like
+                        vt.tiktok.com or youtu.be)? Paste it above, click "Open link in a new tab", then copy the
+                        full address from the tab that opens and paste that back in here before saving. Other video
+                        sites may work too if you paste a direct embed link.
                     </small>
                 </div>
             }
@@ -87,11 +88,11 @@
 @code {
     private GalleryItem _model = new();
     private GalleryMediaType _mediaType = GalleryMediaType.Photo;
-    private string _tikTokUrlInput = "";
+    private string _videoUrlInput = "";
     private List<EventItem> _events = new();
     private bool _uploading;
     private string? _error;
-    private readonly string _tikTokPlaceholder = "https://www.tiktok.com/@dez.reunion/video/1234567890123456789";
+    private readonly string _videoPlaceholder = "https://www.tiktok.com/@dez.reunion/video/... or a YouTube link";
 
     protected override async Task OnInitializedAsync()
     {
@@ -100,13 +101,13 @@
 
     private async Task OpenLinkToResolve()
     {
-        if (string.IsNullOrWhiteSpace(_tikTokUrlInput))
+        if (string.IsNullOrWhiteSpace(_videoUrlInput))
         {
-            _error = "Paste a TikTok link first.";
+            _error = "Paste a video link first.";
             return;
         }
 
-        await JS.InvokeVoidAsync("open", _tikTokUrlInput.Trim(), "_blank");
+        await JS.InvokeVoidAsync("open", _videoUrlInput.Trim(), "_blank");
     }
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
@@ -143,15 +144,15 @@
 
         if (_mediaType == GalleryMediaType.Video)
         {
-            var videoId = SupabaseClient.ExtractTikTokVideoId(_tikTokUrlInput.Trim());
-            if (videoId is null)
+            var parsed = SupabaseClient.ParseVideoLink(_videoUrlInput);
+            if (parsed is null)
             {
-                _error = "Couldn't find a video ID in that link — make sure it's the full tiktok.com/@.../video/... URL.";
+                _error = "That doesn't look like a valid video link — please check and try again.";
                 return;
             }
 
-            _model.VideoUrl = _tikTokUrlInput.Trim();
-            _model.TikTokVideoId = videoId;
+            _model.VideoUrl = parsed.EmbedUrl;
+            _model.TikTokVideoId = parsed.TikTokVideoId;
         }
         else if (string.IsNullOrWhiteSpace(_model.ImageUrl))
         {

@@ -16,7 +16,8 @@ public class SupabaseClient
         PropertyNameCaseInsensitive = true
     };
 
-    private static readonly Regex TikTokVideoIdPattern = new(@"/video/(\d+)", RegexOptions.Compiled);
+    private static readonly Regex TikTokVideoIdPattern = new(@"tiktok\.com/.*?/video/(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex YouTubeIdPattern = new(@"(?:youtube\.com/(?:watch\?v=|embed/|shorts/)|youtu\.be/)([a-zA-Z0-9_-]{11})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private readonly HttpClient _http;
     private readonly SupabaseAuthStateProvider _auth;
@@ -105,13 +106,34 @@ public class SupabaseClient
         await SendAsync(HttpMethod.Delete, $"/rest/v1/gallery_items?id=eq.{id}");
     }
 
-    // ---------------- TikTok link parsing (client-side only, no network hop) ----------------
+    // ---------------- Video link parsing (client-side only, no network hop) ----------------
+    // Detects TikTok (renders via its embed widget) and YouTube (converted to an embeddable URL);
+    // anything else is treated as an already-embeddable URL and dropped straight into an iframe.
 
-    public static string? ExtractTikTokVideoId(string url)
+    public static VideoLinkResult? ParseVideoLink(string url)
     {
-        var match = TikTokVideoIdPattern.Match(url);
-        return match.Success ? match.Groups[1].Value : null;
+        url = url.Trim();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return null;
+        }
+
+        var tikTokMatch = TikTokVideoIdPattern.Match(url);
+        if (tikTokMatch.Success)
+        {
+            return new VideoLinkResult(url, tikTokMatch.Groups[1].Value);
+        }
+
+        var youTubeMatch = YouTubeIdPattern.Match(url);
+        if (youTubeMatch.Success)
+        {
+            return new VideoLinkResult($"https://www.youtube.com/embed/{youTubeMatch.Groups[1].Value}", null);
+        }
+
+        return Uri.TryCreate(url, UriKind.Absolute, out _) ? new VideoLinkResult(url, null) : null;
     }
+
+    public record VideoLinkResult(string EmbedUrl, string? TikTokVideoId);
 
     // ---------------- Storage ----------------
 
