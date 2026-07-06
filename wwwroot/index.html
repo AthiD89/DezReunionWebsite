@@ -31,6 +31,11 @@
 
     <script src="_framework/blazor.webassembly.js"></script>
     <script async src="https://www.tiktok.com/embed.js"></script>
+    <script>
+        document.querySelector('#blazor-error-ui .dismiss').addEventListener('click', function () {
+            document.getElementById('blazor-error-ui').style.display = 'none';
+        });
+    </script>
 </body>
 
 </html>
