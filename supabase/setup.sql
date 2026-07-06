@@ -48,7 +48,7 @@ create policy events_public_read on events
 
 drop policy if exists events_authenticated_write on events;
 create policy events_authenticated_write on events
-    for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+    for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 drop policy if exists gallery_items_public_read on gallery_items;
 create policy gallery_items_public_read on gallery_items
@@ -56,7 +56,7 @@ create policy gallery_items_public_read on gallery_items
 
 drop policy if exists gallery_items_authenticated_write on gallery_items;
 create policy gallery_items_authenticated_write on gallery_items
-    for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+    for all using (auth.uid() is not null) with check (auth.uid() is not null);
 
 -- Storage: run this after you've created the "gallery" bucket in the dashboard (Storage > New bucket, public on).
 drop policy if exists gallery_bucket_public_read on storage.objects;
@@ -65,7 +65,7 @@ create policy gallery_bucket_public_read on storage.objects
 
 drop policy if exists gallery_bucket_authenticated_upload on storage.objects;
 create policy gallery_bucket_authenticated_upload on storage.objects
-    for insert with check (bucket_id = 'gallery' and auth.role() = 'authenticated');
+    for insert with check (bucket_id = 'gallery' and auth.uid() is not null);
 
 -- ============================== Seed data ==============================
 -- Since the tables get dropped and recreated above, running this whole script again
