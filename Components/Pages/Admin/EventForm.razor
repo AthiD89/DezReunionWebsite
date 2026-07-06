@@ -132,7 +132,7 @@
         {
             var file = e.File;
             await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-            _model.ImageUrl = await Supabase.UploadImageAsync(stream, file.Name, file.ContentType);
+            _model.ImageUrl = await Supabase.UploadFileAsync(stream, file.Name, file.ContentType);
         }
         catch (Exception ex)
         {

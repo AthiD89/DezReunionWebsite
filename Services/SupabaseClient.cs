@@ -137,10 +137,10 @@ public class SupabaseClient
 
     // ---------------- Storage ----------------
 
-    public async Task<string> UploadImageAsync(Stream fileStream, string fileName, string contentType)
+    public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType)
     {
         var token = await _auth.GetAccessTokenAsync()
-            ?? throw new InvalidOperationException("You must be logged in to upload photos.");
+            ?? throw new InvalidOperationException("You must be logged in to upload files.");
 
         var extension = System.IO.Path.GetExtension(fileName);
         var safeExtension = Regex.IsMatch(extension, @"^\.[A-Za-z0-9]{1,5}$") ? extension.ToLowerInvariant() : "";

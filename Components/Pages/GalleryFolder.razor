@@ -49,6 +49,12 @@
                                 </blockquote>
                             </div>
                         }
+                        else if (IsDirectVideoFile(video.VideoUrl))
+                        {
+                            <div class="video-wrap">
+                                <video controls preload="metadata" src="@video.VideoUrl"></video>
+                            </div>
+                        }
                         else
                         {
                             <div class="video-wrap">
@@ -93,4 +99,10 @@
 
     private void OpenLightbox(GalleryItem item) => _lightboxItem = item;
     private void CloseLightbox() => _lightboxItem = null;
+
+    private static readonly string[] DirectVideoExtensions = { ".mp4", ".mov", ".webm", ".ogg", ".m4v" };
+
+    private static bool IsDirectVideoFile(string? url) =>
+        !string.IsNullOrWhiteSpace(url) &&
+        DirectVideoExtensions.Any(ext => url.Contains(ext, StringComparison.OrdinalIgnoreCase));
 }

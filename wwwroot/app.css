@@ -420,6 +420,13 @@ main {
     border: none;
 }
 
+.video-wrap video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: black;
+}
+
 .video-wrap-tiktok {
     aspect-ratio: auto;
     background: var(--clr-bg-alt);
