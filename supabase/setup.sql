@@ -1,11 +1,18 @@
 -- Dez Reunion Events - Supabase setup script
 -- Paste this whole file into Supabase's SQL Editor (Database > SQL Editor) and click "Run".
--- Safe to re-run for the tables/policies section, but the seed INSERTs at the bottom
--- will duplicate rows if run twice against a non-empty table - only run those once.
+-- Starts by dropping both tables so it always rebuilds from a clean slate, regardless of
+-- any partial/broken state left over from a previous attempt. Safe to run multiple times
+-- ONLY during initial setup. Once the site is live and you've added real events/gallery
+-- items through the admin area, do NOT run this again - it will delete everything.
+
+-- ============================== Clean slate ==============================
+
+drop table if exists gallery_items cascade;
+drop table if exists events cascade;
 
 -- ============================== Tables ==============================
 
-create table if not exists events (
+create table events (
     id serial primary key,
     title text not null,
     date date not null,
@@ -20,7 +27,7 @@ create table if not exists events (
     price numeric(10, 2)
 );
 
-create table if not exists gallery_items (
+create table gallery_items (
     id serial primary key,
     title text not null,
     event_name text not null,
@@ -60,7 +67,10 @@ drop policy if exists gallery_bucket_authenticated_upload on storage.objects;
 create policy gallery_bucket_authenticated_upload on storage.objects
     for insert with check (bucket_id = 'gallery' and auth.role() = 'authenticated');
 
--- ============================== Seed data (run once) ==============================
+-- ============================== Seed data ==============================
+-- Since the tables get dropped and recreated above, running this whole script again
+-- later is fine too - it won't create duplicates (it just starts fresh each time).
+-- Only worry about duplicates if you copy just this INSERT section on its own.
 
 insert into events (title, date, time, venue, address, dress_code, summary, description, image_url, ticket_url, price)
 values
