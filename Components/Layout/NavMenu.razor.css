@@ -113,15 +113,27 @@
     }
 
     .site-nav.is-open {
-        max-height: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
     }
 
     .site-nav :deep(a) {
-        padding: 0.9rem 1.5rem;
+        padding: 1.15rem 1.5rem;
+        font-size: 1.35rem;
+        font-weight: 700;
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .nav-cta.nav-cta {
-        margin: 0.9rem 1.5rem;
+        margin: 1rem 1.5rem;
+        font-size: 1.15rem;
+        padding: 0.9rem 1.3rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .site-nav :deep(a) {
+        font-size: 1.2rem;
+        padding: 1rem 1.25rem;
     }
 }
