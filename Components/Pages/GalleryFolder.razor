@@ -138,6 +138,7 @@
     private string _moveTargetEvent = "";
     private string? _feedback;
     private bool _busy;
+    private bool _needsTikTokReload;
 
     private List<EventItem> _otherEvents =>
         _allEvents.Where(e => e.Title != EventName).ToList();
@@ -156,6 +157,16 @@
         var matching = all.Where(g => g.EventName == EventName).ToList();
         _photos = matching.Where(g => g.Type == GalleryMediaType.Photo).ToList();
         _videos = matching.Where(g => g.Type == GalleryMediaType.Video).ToList();
+        _needsTikTokReload = _videos.Any(v => !string.IsNullOrWhiteSpace(v.TikTokVideoId));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_needsTikTokReload)
+        {
+            _needsTikTokReload = false;
+            await JS.InvokeVoidAsync("reloadTikTokEmbeds");
+        }
     }
 
     private void OpenItem(GalleryItem item)

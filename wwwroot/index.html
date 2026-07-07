@@ -30,7 +30,7 @@
     </div>
 
     <script src="_framework/blazor.webassembly.js"></script>
-    <script async src="https://www.tiktok.com/embed.js"></script>
+    <script id="tiktok-embed-script" async src="https://www.tiktok.com/embed.js"></script>
     <script>
         document.querySelector('#blazor-error-ui .dismiss').addEventListener('click', function () {
             document.getElementById('blazor-error-ui').style.display = 'none';
@@ -41,6 +41,18 @@
             if (el) {
                 el.scrollIntoView({ behavior: 'smooth' });
             }
+        };
+
+        window.reloadTikTokEmbeds = function () {
+            var existing = document.getElementById('tiktok-embed-script');
+            if (existing) {
+                existing.remove();
+            }
+            var script = document.createElement('script');
+            script.id = 'tiktok-embed-script';
+            script.async = true;
+            script.src = 'https://www.tiktok.com/embed.js';
+            document.body.appendChild(script);
         };
     </script>
 </body>
