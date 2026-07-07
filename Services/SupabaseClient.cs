@@ -140,6 +140,9 @@ public class SupabaseClient
 
     public record VideoLinkResult(string EmbedUrl, string? TikTokVideoId);
 
+    public static bool IsTikTokLink(string? url) =>
+        !string.IsNullOrWhiteSpace(url) && url.Contains("tiktok.com", StringComparison.OrdinalIgnoreCase);
+
     // ---------------- Storage ----------------
 
     public async Task<string> UploadFileAsync(Stream fileStream, string fileName, string contentType)

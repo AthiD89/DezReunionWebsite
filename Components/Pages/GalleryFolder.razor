@@ -61,6 +61,12 @@
                                 <video controls preload="metadata" src="@video.VideoUrl"></video>
                             </div>
                         }
+                        else if (SupabaseClient.IsTikTokLink(video.VideoUrl))
+                        {
+                            <div class="video-wrap video-wrap-tiktok-fallback">
+                                <a href="@video.VideoUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Watch on TikTok</a>
+                            </div>
+                        }
                         else
                         {
                             <div class="video-wrap">

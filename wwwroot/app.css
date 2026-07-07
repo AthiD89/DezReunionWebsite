@@ -436,6 +436,14 @@ main {
     padding: 0.75rem 0;
 }
 
+.video-wrap-tiktok-fallback {
+    aspect-ratio: 16 / 9;
+    background: var(--clr-bg-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .lightbox {
     position: fixed;
     inset: 0;
