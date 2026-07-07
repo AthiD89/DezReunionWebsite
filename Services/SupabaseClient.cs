@@ -198,6 +198,7 @@ public class SupabaseClient
     {
         using var request = new HttpRequestMessage(method, $"{_baseUrl}{path}");
         request.Headers.Add("apikey", _publishableKey);
+        request.Headers.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue { NoCache = true, NoStore = true };
 
         var token = await _auth.GetAccessTokenAsync();
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token ?? _publishableKey);
