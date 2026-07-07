@@ -1,6 +1,7 @@
 @page "/tickets"
 @inject SupabaseClient Supabase
 @inject FormEmailService EmailService
+@inject IJSRuntime JS
 
 <PageTitle>Tickets — Dez Reunion Events</PageTitle>
 
@@ -42,11 +43,11 @@
                                 @if (!string.IsNullOrWhiteSpace(evt.TicketUrl))
                                 {
                                     <a href="@evt.TicketUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Buy Now</a>
-                                    <a href="@($"#rsvp")" class="btn btn-outline btn-sm" @onclick="() => SelectEvent(evt.Id)">RSVP Instead</a>
+                                    <button type="button" class="btn btn-outline btn-sm" @onclick="() => SelectEvent(evt.Id)">RSVP Instead</button>
                                 }
                                 else
                                 {
-                                    <a href="@($"#rsvp")" class="btn btn-primary btn-sm" @onclick="() => SelectEvent(evt.Id)">RSVP Now</a>
+                                    <button type="button" class="btn btn-primary btn-sm" @onclick="() => SelectEvent(evt.Id)">RSVP Now</button>
                                 }
                             </div>
                         </div>
@@ -154,7 +155,11 @@
         }
     }
 
-    private void SelectEvent(int id) => _model.EventId = id;
+    private async Task SelectEvent(int id)
+    {
+        _model.EventId = id;
+        await JS.InvokeVoidAsync("scrollToElement", "rsvp");
+    }
 
     private async Task HandleSubmit()
     {

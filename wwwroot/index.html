@@ -35,6 +35,13 @@
         document.querySelector('#blazor-error-ui .dismiss').addEventListener('click', function () {
             document.getElementById('blazor-error-ui').style.display = 'none';
         });
+
+        window.scrollToElement = function (id) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
     </script>
 </body>
 
