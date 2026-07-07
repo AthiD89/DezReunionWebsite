@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
 
@@ -22,6 +23,12 @@ public class SupabaseAuthStateProvider : AuthenticationStateProvider
         var token = await GetAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
         {
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
+        }
+
+        if (IsExpired(token))
+        {
+            await LogOutAsync();
             return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
 
@@ -50,5 +57,38 @@ public class SupabaseAuthStateProvider : AuthenticationStateProvider
         await _js.InvokeVoidAsync("localStorage.removeItem", EmailKey);
         _cachedToken = null;
         NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+    }
+
+    private static bool IsExpired(string jwt)
+    {
+        try
+        {
+            var parts = jwt.Split('.');
+            if (parts.Length < 2)
+            {
+                return true;
+            }
+
+            var payload = parts[1].Replace('-', '+').Replace('_', '/');
+            switch (payload.Length % 4)
+            {
+                case 2: payload += "=="; break;
+                case 3: payload += "="; break;
+            }
+
+            var bytes = Convert.FromBase64String(payload);
+            using var doc = JsonDocument.Parse(bytes);
+            if (!doc.RootElement.TryGetProperty("exp", out var expElement))
+            {
+                return false;
+            }
+
+            var expiry = DateTimeOffset.FromUnixTimeSeconds(expElement.GetInt64());
+            return expiry <= DateTimeOffset.UtcNow;
+        }
+        catch
+        {
+            return true;
+        }
     }
 }

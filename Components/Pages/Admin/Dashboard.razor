@@ -1,6 +1,7 @@
 @page "/admin"
 @attribute [Authorize]
 @inject SupabaseClient Supabase
+@inject IJSRuntime JS
 
 <PageTitle>Admin Dashboard — Dez Reunion Events</PageTitle>
 
@@ -16,6 +17,11 @@
                 <a href="/admin/gallery/new" class="btn btn-outline btn-sm">+ New Gallery Item</a>
             </div>
         </div>
+
+        @if (_error is not null)
+        {
+            <p class="field-error">@_error</p>
+        }
 
         <h2>Events</h2>
         <div class="admin-table">
@@ -36,7 +42,7 @@
                     </div>
                     <div class="flex gap-1">
                         <a href="@($"/admin/events/{evt.Id}/edit")" class="btn btn-outline btn-sm">Edit</a>
-                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteEvent(evt.Id)">Delete</button>
+                        <button class="btn btn-sm btn-danger" disabled="@_busy" @onclick="() => DeleteEvent(evt.Id, evt.Title)">Delete</button>
                     </div>
                 </div>
             }
@@ -56,7 +62,8 @@
                         <span>@item.EventName &middot; @item.Type</span>
                     </div>
                     <div class="flex gap-1">
-                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteGalleryItem(item.Id)">Delete</button>
+                        <a href="@($"/admin/gallery/{item.Id}/edit")" class="btn btn-outline btn-sm">Edit</a>
+                        <button class="btn btn-sm btn-danger" disabled="@_busy" @onclick="() => DeleteGalleryItem(item.Id, item.Title)">Delete</button>
                     </div>
                 </div>
             }
@@ -67,31 +74,3 @@
         </div>
     </div>
 </section>
-
-@code {
-    private List<EventItem> _events = new();
-    private List<GalleryItem> _gallery = new();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadDataAsync();
-    }
-
-    private async Task LoadDataAsync()
-    {
-        _events = await Supabase.GetAllEventsAsync();
-        _gallery = await Supabase.GetGalleryItemsAsync();
-    }
-
-    private async Task DeleteEvent(int id)
-    {
-        await Supabase.DeleteEventAsync(id);
-        await LoadDataAsync();
-    }
-
-    private async Task DeleteGalleryItem(int id)
-    {
-        await Supabase.DeleteGalleryItemAsync(id);
-        await LoadDataAsync();
-    }
-}

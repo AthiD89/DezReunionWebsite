@@ -38,11 +38,3 @@
         </AuthorizeView>
     </div>
 </footer>
-
-@code {
-    private async Task HandleLogOut()
-    {
-        await AuthState.LogOutAsync();
-        Navigation.NavigateTo("/");
-    }
-}

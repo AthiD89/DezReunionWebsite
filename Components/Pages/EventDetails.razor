@@ -103,15 +103,3 @@ else
         </div>
     </section>
 }
-
-@code {
-    [Parameter]
-    public int Id { get; set; }
-
-    private EventItem? _event;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        _event = await Supabase.GetEventByIdAsync(Id);
-    }
-}

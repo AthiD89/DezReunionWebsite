@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -88,6 +89,13 @@ public class SupabaseClient
         return await ReadListAsync<GalleryItem>(response);
     }
 
+    public async Task<GalleryItem?> GetGalleryItemByIdAsync(int id)
+    {
+        var response = await SendAsync(HttpMethod.Get, $"/rest/v1/gallery_items?select=*&id=eq.{id}");
+        var items = await ReadListAsync<GalleryItem>(response);
+        return items.FirstOrDefault();
+    }
+
     public async Task<List<string>> GetEventNamesAsync()
     {
         var items = await GetGalleryItemsAsync();
@@ -164,8 +172,14 @@ public class SupabaseClient
         var response = await _http.SendAsync(request);
         if (!response.IsSuccessStatusCode)
         {
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                await _auth.LogOutAsync();
+                throw new SupabaseException((int)response.StatusCode, "Your session has expired. Please log in again.");
+            }
+
             var body = await response.Content.ReadAsStringAsync();
-            throw new InvalidOperationException($"Upload rejected ({(int)response.StatusCode}): {body}");
+            throw new SupabaseException((int)response.StatusCode, $"Upload rejected ({(int)response.StatusCode}): {body}");
         }
 
         return $"{_baseUrl}/storage/v1/object/public/gallary/{uniqueName}";
@@ -217,9 +231,29 @@ public class SupabaseClient
         }
 
         var response = await _http.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+            {
+                await _auth.LogOutAsync();
+                throw new SupabaseException((int)response.StatusCode, "Your session has expired. Please log in again.");
+            }
+
+            var body2 = await response.Content.ReadAsStringAsync();
+            throw new SupabaseException((int)response.StatusCode, DescribeFailure(response.StatusCode, body2));
+        }
+
         return response;
     }
+
+    private static string DescribeFailure(HttpStatusCode statusCode, string body) =>
+        statusCode switch
+        {
+            HttpStatusCode.NotFound => "That item couldn't be found — it may have already been deleted.",
+            HttpStatusCode.Conflict => "That couldn't be saved because of a conflicting record.",
+            _ when (int)statusCode >= 500 => "The server had a problem saving that. Please try again in a moment.",
+            _ => "Something went wrong saving that. Please try again."
+        };
 
     private static async Task<List<T>> ReadListAsync<T>(HttpResponseMessage response)
     {
@@ -231,5 +265,15 @@ public class SupabaseClient
     {
         [JsonPropertyName("access_token")]
         public string? AccessToken { get; set; }
+    }
+}
+
+public class SupabaseException : Exception
+{
+    public int StatusCode { get; }
+
+    public SupabaseException(int statusCode, string message) : base(message)
+    {
+        StatusCode = statusCode;
     }
 }

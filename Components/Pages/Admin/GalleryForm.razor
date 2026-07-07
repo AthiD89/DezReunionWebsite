@@ -1,228 +1,112 @@
 @page "/admin/gallery/new"
+@page "/admin/gallery/{Id:int}/edit"
 @attribute [Authorize]
 @inject SupabaseClient Supabase
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<PageTitle>New Gallery Item — Admin</PageTitle>
+<PageTitle>@(Id.HasValue ? "Edit Gallery Item" : "New Gallery Item") — Admin</PageTitle>
 
 <section class="section section-narrow">
     <div class="container">
         <span class="eyebrow">Admin</span>
-        <h1 class="section-title">New Gallery Item</h1>
+        <h1 class="section-title">@(Id.HasValue ? "Edit Gallery Item" : "New Gallery Item")</h1>
 
-        @if (_error is not null)
+        @if (_notFound)
         {
-            <p class="field-error">@_error</p>
+            <p class="field-error">Gallery item not found.</p>
         }
-
-        <EditForm Model="_model" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-
-            <div class="form-group">
-                <label for="title">Title</label>
-                <InputText id="title" class="form-control" @bind-Value="_model.Title" />
-                <small>Filled in automatically from your file name once you upload below — feel free to change it.</small>
-            </div>
-
-            <div class="form-group">
-                <label for="event">Event</label>
-                <InputSelect id="event" class="form-control" @bind-Value="_model.EventName">
-                    <option value="">Select an event</option>
-                    @foreach (var evt in _events)
-                    {
-                        <option value="@evt.Title">@evt.Title</option>
-                    }
-                </InputSelect>
-            </div>
-
-            <div class="form-group">
-                <label>Media Type</label>
-                <div class="flex gap-2">
-                    <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Photo)" @onchange="@(() => { _mediaType = GalleryMediaType.Photo; })" /> Photo</label>
-                    <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Video)" @onchange="@(() => { _mediaType = GalleryMediaType.Video; })" /> Video</label>
-                </div>
-            </div>
-
-            @if (_mediaType == GalleryMediaType.Photo)
+        else
+        {
+            @if (_error is not null)
             {
-                <div class="form-group">
-                    <label for="photo">Photo</label>
-                    <InputFile id="photo" OnChange="HandleFileSelected" accept="image/*" />
-                    @if (_uploading)
-                    {
-                        <small>Uploading...</small>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(_model.ImageUrl))
-                    {
-                        <small>Uploaded ✓</small>
-                    }
-                </div>
+                <p class="field-error">@_error</p>
             }
-            else
-            {
+
+            <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+
                 <div class="form-group">
-                    <label for="videofile">Upload a Video File</label>
-                    <InputFile id="videofile" OnChange="HandleVideoFileSelected" accept="video/*" />
-                    @if (_uploading)
-                    {
-                        <small>Uploading... this can take a while for larger files.</small>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(_uploadedVideoUrl))
-                    {
-                        <small>Uploaded ✓</small>
-                    }
-                    <small>Up to 50MB. For longer or higher-quality clips, use a video link below instead of uploading.</small>
+                    <label for="title">Title</label>
+                    <InputText id="title" class="form-control" @bind-Value="_model.Title" />
+                    <small>Filled in automatically from your file name once you upload below — feel free to change it.</small>
+                    <ValidationMessage For="() => _model.Title" class="field-error" />
                 </div>
 
                 <div class="form-group">
-                    <label for="videolink">Or Paste a Video Link</label>
-                    <InputText id="videolink" class="form-control" @bind-Value="_videoUrlInput" placeholder="@_videoPlaceholder" />
-                    <div class="flex gap-1" style="margin-top:0.4rem">
-                        <button type="button" class="btn btn-outline btn-sm" @onclick="OpenLinkToResolve">
-                            Open link in a new tab
-                        </button>
+                    <label for="event">Event</label>
+                    <InputSelect id="event" class="form-control" @bind-Value="_model.EventName">
+                        <option value="">Select an event</option>
+                        @foreach (var evt in _events)
+                        {
+                            <option value="@evt.Title">@evt.Title</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => _model.EventName" class="field-error" />
+                </div>
+
+                <div class="form-group">
+                    <label>Media Type</label>
+                    <div class="flex gap-2">
+                        <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Photo)" @onchange="@(() => { _mediaType = GalleryMediaType.Photo; })" /> Photo</label>
+                        <label><input type="radio" name="mediaType" checked="@(_mediaType == GalleryMediaType.Video)" @onchange="@(() => { _mediaType = GalleryMediaType.Video; })" /> Video</label>
                     </div>
-                    <small>
-                        Works with TikTok and YouTube links — just paste them in. Got a shortened link (like
-                        vt.tiktok.com or youtu.be)? Paste it above, click "Open link in a new tab", then copy the
-                        full address from the tab that opens and paste that back in here before saving. Other video
-                        sites may work too if you paste a direct embed link. Only used if you haven't uploaded a
-                        file above.
-                    </small>
                 </div>
-            }
 
-            <div class="flex gap-1">
-                <button type="submit" class="btn btn-primary" disabled="@_uploading">Save</button>
-                <a href="/admin" class="btn btn-outline">Cancel</a>
-            </div>
-        </EditForm>
-    </div>
-</section>
-
-@code {
-    private GalleryItem _model = new();
-    private GalleryMediaType _mediaType = GalleryMediaType.Photo;
-    private string _videoUrlInput = "";
-    private string? _uploadedVideoUrl;
-    private List<EventItem> _events = new();
-    private bool _uploading;
-    private string? _error;
-    private readonly string _videoPlaceholder = "https://www.tiktok.com/@dez.reunion/video/... or a YouTube link";
-
-    protected override async Task OnInitializedAsync()
-    {
-        _events = await Supabase.GetAllEventsAsync();
-    }
-
-    private async Task OpenLinkToResolve()
-    {
-        if (string.IsNullOrWhiteSpace(_videoUrlInput))
-        {
-            _error = "Paste a video link first.";
-            return;
-        }
-
-        await JS.InvokeVoidAsync("open", _videoUrlInput.Trim(), "_blank");
-    }
-
-    private async Task HandleFileSelected(InputFileChangeEventArgs e)
-    {
-        _error = null;
-        _uploading = true;
-        try
-        {
-            var file = e.File;
-            await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-            _model.ImageUrl = await Supabase.UploadFileAsync(stream, file.Name, file.ContentType);
-            if (string.IsNullOrWhiteSpace(_model.Title))
-            {
-                _model.Title = FileNameToTitle(file.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _error = $"Photo upload failed: {ex.Message}";
-        }
-        finally
-        {
-            _uploading = false;
-        }
-    }
-
-    private async Task HandleVideoFileSelected(InputFileChangeEventArgs e)
-    {
-        _error = null;
-        _uploading = true;
-        try
-        {
-            var file = e.File;
-            await using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
-            _uploadedVideoUrl = await Supabase.UploadFileAsync(stream, file.Name, file.ContentType);
-            if (string.IsNullOrWhiteSpace(_model.Title))
-            {
-                _model.Title = FileNameToTitle(file.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _error = $"Video upload failed: {ex.Message}";
-        }
-        finally
-        {
-            _uploading = false;
-        }
-    }
-
-    private static string FileNameToTitle(string fileName)
-    {
-        var nameOnly = System.IO.Path.GetFileNameWithoutExtension(fileName);
-        var spaced = nameOnly.Replace('_', ' ').Replace('-', ' ').Trim();
-        return string.IsNullOrWhiteSpace(spaced)
-            ? "Untitled"
-            : System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(spaced.ToLowerInvariant());
-    }
-
-    private async Task HandleSubmit()
-    {
-        _error = null;
-
-        if (string.IsNullOrWhiteSpace(_model.EventName))
-        {
-            _error = "Please select an event.";
-            return;
-        }
-
-        _model.Type = _mediaType;
-
-        if (_mediaType == GalleryMediaType.Video)
-        {
-            if (!string.IsNullOrWhiteSpace(_uploadedVideoUrl))
-            {
-                _model.VideoUrl = _uploadedVideoUrl;
-                _model.TikTokVideoId = null;
-            }
-            else
-            {
-                var parsed = SupabaseClient.ParseVideoLink(_videoUrlInput);
-                if (parsed is null)
+                @if (_mediaType == GalleryMediaType.Photo)
                 {
-                    _error = "Please upload a video file, or paste a valid video link.";
-                    return;
+                    <div class="form-group">
+                        <label for="photo">Photo</label>
+                        <InputFile id="photo" OnChange="HandleFileSelected" accept="image/*" />
+                        @if (_uploading)
+                        {
+                            <small>Uploading...</small>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(_model.ImageUrl))
+                        {
+                            <small>Uploaded ✓</small>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label for="videofile">Upload a Video File</label>
+                        <InputFile id="videofile" OnChange="HandleVideoFileSelected" accept="video/*" />
+                        @if (_uploading)
+                        {
+                            <small>Uploading... this can take a while for larger files.</small>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(_uploadedVideoUrl))
+                        {
+                            <small>Uploaded ✓</small>
+                        }
+                        <small>Up to 50MB. For longer or higher-quality clips, use a video link below instead of uploading.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="videolink">Or Paste a Video Link</label>
+                        <InputText id="videolink" class="form-control" @bind-Value="_videoUrlInput" placeholder="@_videoPlaceholder" />
+                        <div class="flex gap-1" style="margin-top:0.4rem">
+                            <button type="button" class="btn btn-outline btn-sm" @onclick="OpenLinkToResolve">
+                                Open link in a new tab
+                            </button>
+                        </div>
+                        <small>
+                            Works with TikTok and YouTube links — just paste them in. Got a shortened link (like
+                            vt.tiktok.com or youtu.be)? Paste it above, click "Open link in a new tab", then copy the
+                            full address from the tab that opens and paste that back in here before saving. Other video
+                            sites may work too if you paste a direct embed link. Only used if you haven't uploaded a
+                            file above.
+                        </small>
+                    </div>
                 }
 
-                _model.VideoUrl = parsed.EmbedUrl;
-                _model.TikTokVideoId = parsed.TikTokVideoId;
-            }
+                <div class="flex gap-1">
+                    <button type="submit" class="btn btn-primary" disabled="@_uploading">Save</button>
+                    <a href="/admin" class="btn btn-outline">Cancel</a>
+                </div>
+            </EditForm>
         }
-        else if (string.IsNullOrWhiteSpace(_model.ImageUrl))
-        {
-            _error = "Please upload a photo.";
-            return;
-        }
-
-        await Supabase.AddGalleryItemAsync(_model);
-        Navigation.NavigateTo("/admin");
-    }
-}
+    </div>
+</section>

@@ -15,7 +15,11 @@
 
 <section class="section" style="padding-top:0">
     <div class="container">
-        @if (_upcoming.Count == 0)
+        @if (_loadError is not null)
+        {
+            <p class="field-error text-center">@_loadError</p>
+        }
+        else if (_upcoming.Count == 0)
         {
             <p class="text-center">No events are open for booking right now — check back soon.</p>
         }
@@ -70,7 +74,8 @@
                     <div class="form-success">
                         Thanks @_model.Name! Your RSVP for
                         "@(_upcoming.FirstOrDefault(e => e.Id == _model.EventId)?.Title ?? "the event")"
-                        has been received — we'll be in touch at @_model.Email to confirm.
+                        has been received — we'll be in touch at @_model.Email to confirm. This reserves your spot;
+                        it isn't a paid ticket.
                     </div>
                 }
                 else
@@ -110,6 +115,7 @@
                                     <option value="@evt.Id">@evt.Title — @evt.Date.ToString("dd MMM yyyy")</option>
                                 }
                             </InputSelect>
+                            <ValidationMessage For="() => _model.EventId" class="field-error" />
                         </div>
 
                         <div class="form-group">
@@ -124,76 +130,14 @@
             </div>
 
             <div class="qr-card">
-                <h3>Your Ticket, Ready to Scan</h3>
+                <h3>How Tickets Work</h3>
                 <img src="/images/qr-placeholder.svg" alt="Sample QR ticket" class="qr-sample" />
                 <p>
-                    Once you book online or RSVP, we'll email you a unique QR code ticket.
-                    Just show it on your phone at the door for fast, contactless entry — no printing required.
+                    Tickets are sold through Quicket — book online with "Buy Now" and Quicket will email you a QR
+                    code ticket for fast, contactless entry. RSVPing here instead just reserves your spot for a free
+                    or pay-at-the-door event; we'll follow up personally to confirm the details, no ticket required.
                 </p>
             </div>
         </div>
     </div>
 </section>
-
-@code {
-    private List<EventItem> _upcoming = new();
-    private RsvpRequest _model = new();
-    private bool _submitted;
-    private bool _sending;
-    private string? _error;
-
-    [SupplyParameterFromQuery(Name = "event")]
-    public int? EventQuery { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        _upcoming = await Supabase.GetUpcomingEventsAsync();
-
-        if (EventQuery.HasValue && _upcoming.Any(e => e.Id == EventQuery.Value))
-        {
-            _model.EventId = EventQuery.Value;
-        }
-    }
-
-    private async Task SelectEvent(int id)
-    {
-        _model.EventId = id;
-        await JS.InvokeVoidAsync("scrollToElement", "rsvp");
-    }
-
-    private async Task HandleSubmit()
-    {
-        _error = null;
-        _sending = true;
-        try
-        {
-            var eventTitle = _upcoming.FirstOrDefault(e => e.Id == _model.EventId)?.Title ?? "Not specified";
-
-            var sent = await EmailService.SendAsync("New RSVP — Dez Reunion Events", new Dictionary<string, string>
-            {
-                ["name"] = _model.Name,
-                ["email"] = _model.Email,
-                ["phone"] = _model.Phone ?? "",
-                ["event"] = eventTitle,
-                ["guests"] = _model.Guests.ToString()
-            });
-
-            if (sent)
-            {
-                _submitted = true;
-            }
-            else
-            {
-                _error = "Something went wrong sending your RSVP. Please try again, or reach out via WhatsApp instead.";
-            }
-        }
-        catch (Exception)
-        {
-            _error = "Something went wrong sending your RSVP. Please try again, or reach out via WhatsApp instead.";
-        }
-        finally
-        {
-            _sending = false;
-        }
-    }
-}
